@@ -1,0 +1,7 @@
+# Secret keys
+secrets.py
+
+# Python files
+*.pyc
+__pycache__
+/env
