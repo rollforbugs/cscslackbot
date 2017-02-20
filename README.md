@@ -15,7 +15,15 @@ virtualenv env
 env/bin/activate.sh
 ```
 depending on your platform.
-Then, run `pip install -r requirements.txt`.
+
+If you are running Arch (will probably work on other Linux platforms, too), you
+can use the commands `virtualenv2` and `virtualenv3` to specify the version of
+Python that you want to use in the virtual environment. Officially, this project
+uses Python 2, so while it may work in Python 3, please use Python 2 for
+development or check that you are using Python 2 before reporting that the bot
+is not working.
+
+After setting up the virtual environment, run `pip install -r requirements.txt`.
 
 Make sure to copy `secrets.py.sample` to `secrets.py` and get a testing API key
 from [here](https://api.slack.com/docs/oauth-test-tokens).
