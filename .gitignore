@@ -5,3 +5,6 @@ secrets.py
 *.pyc
 __pycache__
 /env
+
+# IDE files
+/.idea
