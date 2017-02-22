@@ -62,22 +62,30 @@ def parse_command(event):
 def run():
     if sc.rtm_connect():
         try:
-            sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m online!')
+            if config.debug_mode:
+                sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m online!')
+
             while True:
                 events = sc.rtm_read()
                 for event in events:
-                    # Whitelist #bottesting
-                    if 'channel' not in event:
-                        continue
-                    if event['channel'] not in ['C494WSTUL', '#bottesting']:
-                        continue
+                    if config.debug_mode:
+                        # Whitelist #bottesting
+                        if 'channel' not in event:
+                            continue
+                        if event['channel'] not in ['C494WSTUL', '#bottesting']:
+                            continue
+                        # Only respond to the developer when in debug mode
+                        if 'user' not in event or event['user'] != authed_user:
+                            return
 
                     parse_command(event)
                     log_info(str(event))
         except KeyboardInterrupt:
-            sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (SIGINT)')
+            if config.debug_mode:
+                sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (SIGINT)')
         except:
-            sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (exception)')
+            if config.debug_mode:
+                sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (exception)')
 
 
 if __name__ == '__main__':
