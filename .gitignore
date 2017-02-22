@@ -4,7 +4,8 @@ secrets.py
 # Python files
 *.pyc
 __pycache__
-/env
+/env*/
+/venv*/
 
 # IDE files
 /.idea
