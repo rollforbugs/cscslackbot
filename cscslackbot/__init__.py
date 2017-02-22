@@ -42,11 +42,10 @@ def parse_command(event):
                     text=greeting)
 
     if action == 'slap':
-        split = command.split()
-        if len(split) < 2:
+        name = command.partition('slap')[2].strip()
+        if name == '':
             return
-        user = split[1]
-        slapped = '/me slaps {}!'.format(user)
+        slapped = '/me slaps {}!'.format(name)
         sc.api_call('chat.postMessage',
                     channel=event['channel'],
                     text=slapped)
