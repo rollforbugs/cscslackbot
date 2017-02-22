@@ -1,9 +1,8 @@
 from __future__ import unicode_literals
 from slackclient import SlackClient
-import time
 import config
 import secrets
-from utils.logging import log_info
+from utils.logging import log_info, log_error
 
 sc = SlackClient(secrets.SLACK_API_KEY)
 channels = sc.api_call('channels.list', exclude_archived=1)
@@ -41,15 +40,28 @@ def parse_command(event: dict):
         sc.api_call('chat.postMessage',
                     channel=event['channel'],
                     text=greeting)
+        log_error('blah')
 
 
 def main():
     if sc.rtm_connect():
-        while True:
-            events = sc.rtm_read()
-            for event in events:
-                parse_command(event)
-                log_info(str(event))
+        try:
+            sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m online!')
+            while True:
+                events = sc.rtm_read()
+                for event in events:
+                    # Whitelist #bottesting
+                    if 'channel' not in event:
+                        continue
+                    if event['channel'] not in ['C494WSTUL', '#bottesting']:
+                        continue
+
+                    parse_command(event)
+                    log_info(str(event))
+        except KeyboardInterrupt:
+            sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (SIGINT)')
+        except:
+            sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (exception)')
 
 
 if __name__ == '__main__':
