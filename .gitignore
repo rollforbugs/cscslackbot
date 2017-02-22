@@ -1,5 +1,7 @@
 # Secret keys
 secrets.py
+# Per-user files
+config.py
 
 # Python files
 *.pyc
