@@ -6,7 +6,8 @@ from cscslackbot.utils.logging import log_info
 
 sc = SlackClient(secrets.SLACK_API_KEY)
 channels = sc.api_call('channels.list', exclude_archived=1)
-authed_user = sc.api_call('auth.test', token=secrets.SLACK_API_KEY)['user']
+authed_user = ''
+authed_user_id = ''
 
 
 def parse_command(event):
@@ -62,12 +63,18 @@ def parse_command(event):
 def run():
     if sc.rtm_connect():
         try:
+            test_result = sc.api_call('auth.test', token=secrets.SLACK_API_KEY)
+            authed_user = test_result['user']
+            authed_user_id = test_result['user_id']
+
             if config.debug_mode:
                 sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m online!')
 
             while True:
                 events = sc.rtm_read()
                 for event in events:
+                    log_info(str(event))
+
                     if config.debug_mode:
                         # Whitelist #bottesting
                         if 'channel' not in event:
@@ -75,17 +82,13 @@ def run():
                         if event['channel'] not in ['C494WSTUL', '#bottesting']:
                             continue
                         # Only respond to the developer when in debug mode
-                        if 'user' not in event or event['user'] != authed_user:
-                            return
+                        if 'user' not in event or event['user'] != authed_user_id:
+                            continue
 
                     parse_command(event)
-                    log_info(str(event))
         except KeyboardInterrupt:
             if config.debug_mode:
                 sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (SIGINT)')
-        except:
-            if config.debug_mode:
-                sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (exception)')
 
 
 if __name__ == '__main__':
