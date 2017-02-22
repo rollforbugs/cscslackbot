@@ -3,6 +3,7 @@ from slackclient import SlackClient
 import time
 import config
 import secrets
+from utils.logging import log_info
 
 sc = SlackClient(secrets.SLACK_API_KEY)
 channels = sc.api_call('channels.list', exclude_archived=1)
@@ -48,7 +49,7 @@ def main():
             events = sc.rtm_read()
             for event in events:
                 parse_command(event)
-                print(time.strftime("%Y-%m-%d %H:%M:%S  ", time.gmtime()) + str(event))
+                log_info(str(event))
 
 
 if __name__ == '__main__':
