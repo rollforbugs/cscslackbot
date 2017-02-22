@@ -48,8 +48,8 @@ def parse_command(event):
         name = command.partition('slap')[2].strip()
         if name == '':
             return
-        slapped = 'slaps {}!'.format(name)
-        sc.api_call('chat.meMessage',
+        slapped = ':hand: :eight_pointed_black_star: {}!'.format(name)
+        sc.api_call('chat.postMessage',
                     channel=event['channel'],
                     text=slapped)
 
