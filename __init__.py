@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 from slackclient import SlackClient
 import time
+import config
 import secrets
 
 sc = SlackClient(secrets.SLACK_API_KEY)
 channels = sc.api_call('channels.list', exclude_archived=1)
-prefix = '!'
 
 
 def parse_command(event: dict):
@@ -20,11 +20,11 @@ def parse_command(event: dict):
     # Get the message
     message = event['text'].strip()
     # Check if the message is for us
-    if not message.startswith(prefix):
+    if not message.startswith(config.prefix):
         return
 
     # Perform the appropriate action
-    command = message[len(prefix):].strip()
+    command = message[len(config.prefix):].strip()
     action = command.split()[0]
     if action == 'help':
         sc.api_call('chat.postMessage',
