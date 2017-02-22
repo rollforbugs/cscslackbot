@@ -8,7 +8,7 @@ sc = SlackClient(secrets.SLACK_API_KEY)
 channels = sc.api_call('channels.list', exclude_archived=1)
 
 
-def parse_command(event: dict):
+def parse_command(event):
     # Validate event
     if 'type' not in event:
         return
