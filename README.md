@@ -4,7 +4,13 @@ This is a Slack bot for the Wright State University Cybersecurity Club.
 
 Setup
 -----
-To run the bot, set up a Python virtual environment with
+It is highly recommended to have a virtual environment set up with virtualenv.
+If you don't have virtualenv installed, you can get it using pip by running
+```bash
+pip install virtualenv
+```
+
+You can then set up a Python virtual environment with
 ```bash
 virtualenv env
 source env/bin/activate
@@ -27,6 +33,9 @@ After setting up the virtual environment, run `pip install -r requirements.txt`.
 
 Make sure to copy `secrets.py.sample` to `secrets.py` and get a testing API key
 from [here](https://api.slack.com/docs/oauth-test-tokens).
+
+After all that, you can just run `python2 run.py`, `python3 run.py`, or
+`python run.py` to start the bot.
 
 Style Guidelines
 ----------------
