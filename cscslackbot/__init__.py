@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 from slackclient import SlackClient
 import config
 import secrets
-from utils.logging import log_info, log_error
+from cscslackbot.utils.logging import log_info
 
 sc = SlackClient(secrets.SLACK_API_KEY)
 channels = sc.api_call('channels.list', exclude_archived=1)
@@ -52,7 +52,7 @@ def parse_command(event):
                     text=slapped)
 
 
-def main():
+def run():
     if sc.rtm_connect():
         try:
             sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m online!')
@@ -74,4 +74,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main()
+    run()
