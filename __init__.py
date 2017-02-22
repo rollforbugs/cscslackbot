@@ -42,6 +42,13 @@ def parse_command(event: dict):
                     channel=event['channel'],
                     text=greeting)
 
+     if action == 'slap':
+         if 'user' in event:
+             user = event['user']
+             slapped = '/me slaps <@{}>!   '.format(user)
+         sc.api_call('chat.postMessage',
+                     channel=event['channel'],
+                     text=slaped)
 
 def main():
     if sc.rtm_connect():
