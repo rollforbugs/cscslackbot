@@ -6,6 +6,7 @@ from cscslackbot.utils.logging import log_info
 
 sc = SlackClient(secrets.SLACK_API_KEY)
 channels = sc.api_call('channels.list', exclude_archived=1)
+authed_user = sc.api_call('auth.test', token=secrets.SLACK_API_KEY)['user']
 
 
 def parse_command(event):
@@ -29,9 +30,11 @@ def parse_command(event):
     if action == 'help':
         sc.api_call('chat.postMessage',
                     channel=event['channel'],
-                    text='Right now, I support the following commands:\n`!help`\n`!hello`\n'
+                    text='Right now, I support the following commands:\n'
+                         + '`!help`\n`!hello`\n`!slap`\n`!identify`\n'
                          + 'This help is also literally just a string right now.\n'
                          + 'A more robust architecture would be nice.')
+
     if action == 'hello':
         greeting = 'Hey! :partyparrot:'
         if 'user' in event:
@@ -45,10 +48,15 @@ def parse_command(event):
         name = command.partition('slap')[2].strip()
         if name == '':
             return
-        slapped = '/me slaps {}!'.format(name)
-        sc.api_call('chat.postMessage',
+        slapped = 'slaps {}!'.format(name)
+        sc.api_call('chat.meMessage',
                     channel=event['channel'],
                     text=slapped)
+
+    if action == 'identify':
+        sc.api_call('chat.postMessage',
+                    channel=event['channel'],
+                    text='{}\'s bot, reporting in'.format(authed_user))
 
 
 def run():
