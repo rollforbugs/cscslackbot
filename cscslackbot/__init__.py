@@ -68,7 +68,7 @@ def run():
             authed_user_id = test_result['user_id']
 
             if config.debug_mode:
-                sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m online!')
+                sc.api_call('chat.postMessage', channel='#bottesting', text='{} is now testing.'.format(authed_user))
 
             while True:
                 events = sc.rtm_read()
