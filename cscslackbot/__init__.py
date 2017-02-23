@@ -60,38 +60,6 @@ def parse_command(event):
             except tweepy.error.TweepError:
                 pass
 
-    # Check if the message is for us
-    if not message.startswith(config.prefix):
-        return
-
-    # Perform the appropriate action
-    command = message[len(config.prefix):].strip()
-    action = command.split()[0]
-    if action == 'help':
-        slack.send_message(event['channel'],
-                           'Right now, I support the following commands:\n'
-                           + '`!help`\n`!hello`\n`!slap`\n`!identify`\n'
-                           + 'This help is also literally just a string right now.\n'
-                           + 'A more robust architecture would be nice.')
-
-    if action == 'hello':
-        greeting = 'Hey! :partyparrot:'
-        if 'user' in event:
-            user = event['user']
-            greeting = 'Hey <@{}>! :partyparrot:'.format(user)
-        slack.send_message(event['channel'], greeting)
-
-    if action == 'slap':
-        name = command.partition('slap')[2].strip()
-        if name == '':
-            return
-        slapped = ':hand: :eight_pointed_black_star: {}!'.format(name)
-        slack.send_message(event['channel'], slapped)
-
-    if action == 'identify':
-        slack.send_message(event['channel'],
-                           '{}\'s bot, reporting in'.format(slack.authed_user))
-
 
 def run():
     if not slack.connect():
