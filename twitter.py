@@ -22,7 +22,7 @@ def find_twitter_url(msg):
     link_rx = r'(?:http[s]?://)?twitter\.com/[A-z0-9]+/status/\d+'
 
     match = re.findall(link_rx, msg)
-    if len(match) < 0:
+    if len(match) == 0:
         return None
     return match[0]
 

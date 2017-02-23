@@ -24,7 +24,7 @@ try:
     access_token = secrets.twitter_access_token
     access_secret = secrets.twitter_access_secret
 
-    if "" not in { consumer_key,consumer_secret,access_token,access_secret}:
+    if "" not in {consumer_key, consumer_secret, access_token, access_secret}:
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
         auth.set_access_token(access_token, access_secret)
         twitter_api = tweepy.API(auth)
@@ -34,6 +34,7 @@ try:
 except AttributeError:
     print("Update secrets for twitter api", file=sys.stderr)
     using_twiiter = False
+
 
 def parse_command(event):
     # Validate event
@@ -54,7 +55,11 @@ def parse_command(event):
             status_id = twitter.parse_status_url(twitter_url)
             try:
                 tweet = twitter_api.get_status(status_id)
-                msg_out = "".join(["> ", tweet.text,"\n", tweet.display_name, " - ", tweet.created_at[:4]])
+                tweet_ = tweet.text.strip().replace("\n", "\n> ")
+                msg_out = "".join(
+                    ["> ", tweet_, "\n", tweet.author.screen_name, " - ",
+                     str(tweet.created_at.year)])
+
                 sc.api_call('chat.postMessage',
                             channel=event['channel'],
                             text=msg_out)
