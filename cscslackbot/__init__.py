@@ -56,9 +56,7 @@ def parse_command(event):
                     ["> ", tweet_, "\n", tweet.author.screen_name, " - ",
                      str(tweet.created_at.year)])
 
-                slack.client.api_call('chat.postMessage',
-                                      channel=event['channel'],
-                                      text=msg_out)
+                slack.send_message(event['channel'], msg_out)
             except tweepy.error.TweepError:
                 pass
 
@@ -70,35 +68,29 @@ def parse_command(event):
     command = message[len(config.prefix):].strip()
     action = command.split()[0]
     if action == 'help':
-        slack.client.api_call('chat.postMessage',
-                              channel=event['channel'],
-                              text='Right now, I support the following commands:\n'
-                                   + '`!help`\n`!hello`\n`!slap`\n`!identify`\n'
-                                   + 'This help is also literally just a string right now.\n'
-                                   + 'A more robust architecture would be nice.')
+        slack.send_message(event['channel'],
+                           'Right now, I support the following commands:\n'
+                           + '`!help`\n`!hello`\n`!slap`\n`!identify`\n'
+                           + 'This help is also literally just a string right now.\n'
+                           + 'A more robust architecture would be nice.')
 
     if action == 'hello':
         greeting = 'Hey! :partyparrot:'
         if 'user' in event:
             user = event['user']
             greeting = 'Hey <@{}>! :partyparrot:'.format(user)
-        slack.client.api_call('chat.postMessage',
-                              channel=event['channel'],
-                              text=greeting)
+        slack.send_message(event['channel'], greeting)
 
     if action == 'slap':
         name = command.partition('slap')[2].strip()
         if name == '':
             return
         slapped = ':hand: :eight_pointed_black_star: {}!'.format(name)
-        slack.client.api_call('chat.postMessage',
-                              channel=event['channel'],
-                              text=slapped)
+        slack.send_message(event['channel'], slapped)
 
     if action == 'identify':
-        slack.client.api_call('chat.postMessage',
-                              channel=event['channel'],
-                              text='{}\'s bot, reporting in'.format(slack.authed_user))
+        slack.send_message(event['channel'],
+                           '{}\'s bot, reporting in'.format(slack.authed_user))
 
 
 def run():
@@ -115,7 +107,7 @@ def run():
 
     try:
         while True:
-            events = slack.client.rtm_read()
+            events = slack.get_event()
             for event in events:
                 log_info(str(event))
 
@@ -132,7 +124,7 @@ def run():
                 parse_command(event)
     except KeyboardInterrupt:
         if config.debug_mode:
-            slack.client.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (SIGINT)')
+            slack.send_message('#bottesting', 'I\'m dead! (SIGINT)')
 
 
 if __name__ == '__main__':

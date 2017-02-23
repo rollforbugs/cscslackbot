@@ -7,9 +7,7 @@ from cscslackbot.utils.logging import log_info
 
 class EchoCommand(Command):
     def process_command(self, event, args=None):
-        slack.client.api_call('chat.postMessage',
-                              channel=event['channel'],
-                              text=args)
+        slack.send_message(event['channel'], args)
         log_info('Responding to echo')
 
 register_plugin(EchoCommand())

@@ -36,3 +36,14 @@ def connect():
     authed_team_url = test_result['url']
     channels = client.api_call('channels.list', exclude_archived=1)
     return True
+
+
+def send_message(channel, message, **kwargs):
+    return client.api_call('chat.postMessage',
+                           channel=channel,
+                           text=message,
+                           **kwargs)
+
+
+def get_event():
+    return client.rtm_read()
