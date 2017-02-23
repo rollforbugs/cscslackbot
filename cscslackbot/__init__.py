@@ -3,18 +3,12 @@ from __future__ import unicode_literals
 
 import sys
 import tweepy
-from slackclient import SlackClient
 
 import config
 import secrets
 import twitter
-from cscslackbot.utils.logging import log_info
-
-# Configure slack api
-sc = SlackClient(secrets.SLACK_API_KEY)
-channels = sc.api_call('channels.list', exclude_archived=1)
-authed_user = ''
-authed_user_id = ''
+import cscslackbot.slack as slack
+from cscslackbot.utils.logging import log_info, log_error
 
 # Configure twitter api
 using_twiiter = True
@@ -60,9 +54,9 @@ def parse_command(event):
                     ["> ", tweet_, "\n", tweet.author.screen_name, " - ",
                      str(tweet.created_at.year)])
 
-                sc.api_call('chat.postMessage',
-                            channel=event['channel'],
-                            text=msg_out)
+                slack.client.api_call('chat.postMessage',
+                                      channel=event['channel'],
+                                      text=msg_out)
             except tweepy.error.TweepError:
                 pass
 
@@ -74,66 +68,67 @@ def parse_command(event):
     command = message[len(config.prefix):].strip()
     action = command.split()[0]
     if action == 'help':
-        sc.api_call('chat.postMessage',
-                    channel=event['channel'],
-                    text='Right now, I support the following commands:\n'
-                         + '`!help`\n`!hello`\n`!slap`\n`!identify`\n'
-                         + 'This help is also literally just a string right now.\n'
-                         + 'A more robust architecture would be nice.')
+        slack.client.api_call('chat.postMessage',
+                              channel=event['channel'],
+                              text='Right now, I support the following commands:\n'
+                                   + '`!help`\n`!hello`\n`!slap`\n`!identify`\n'
+                                   + 'This help is also literally just a string right now.\n'
+                                   + 'A more robust architecture would be nice.')
 
     if action == 'hello':
         greeting = 'Hey! :partyparrot:'
         if 'user' in event:
             user = event['user']
             greeting = 'Hey <@{}>! :partyparrot:'.format(user)
-        sc.api_call('chat.postMessage',
-                    channel=event['channel'],
-                    text=greeting)
+        slack.client.api_call('chat.postMessage',
+                              channel=event['channel'],
+                              text=greeting)
 
     if action == 'slap':
         name = command.partition('slap')[2].strip()
         if name == '':
             return
         slapped = ':hand: :eight_pointed_black_star: {}!'.format(name)
-        sc.api_call('chat.postMessage',
-                    channel=event['channel'],
-                    text=slapped)
+        slack.client.api_call('chat.postMessage',
+                              channel=event['channel'],
+                              text=slapped)
 
     if action == 'identify':
-        sc.api_call('chat.postMessage',
-                    channel=event['channel'],
-                    text='{}\'s bot, reporting in'.format(authed_user))
+        slack.client.api_call('chat.postMessage',
+                              channel=event['channel'],
+                              text='{}\'s bot, reporting in'.format(slack.authed_user))
 
 
 def run():
-    if sc.rtm_connect():
-        try:
-            test_result = sc.api_call('auth.test', token=secrets.SLACK_API_KEY)
-            authed_user = test_result['user']
-            authed_user_id = test_result['user_id']
+    if not slack.connect():
+        log_error('Cannot connect to Slack. Please verify your token in the config.')
+        return
 
-            if config.debug_mode:
-                sc.api_call('chat.postMessage', channel='#bottesting', text='{} is now testing.'.format(authed_user))
+    if config.debug_mode:
+        slack.client.api_call('chat.postMessage',
+                              channel='#bottesting',
+                              text='{} is now testing.'.format(slack.authed_user))
 
-            while True:
-                events = sc.rtm_read()
-                for event in events:
-                    log_info(str(event))
+    try:
+        while True:
+            events = slack.client.rtm_read()
+            for event in events:
+                log_info(str(event))
 
-                    if config.debug_mode:
-                        # Whitelist #bottesting
-                        if 'channel' not in event:
-                            continue
-                        if event['channel'] not in ['C494WSTUL', '#bottesting']:
-                            continue
-                        # Only respond to the developer when in debug mode
-                        if 'user' not in event or event['user'] != authed_user_id:
-                            continue
+                if config.debug_mode:
+                    # Whitelist #bottesting
+                    if 'channel' not in event:
+                        continue
+                    if event['channel'] not in ['C494WSTUL', '#bottesting']:
+                        continue
+                    # Only respond to the developer when in debug mode
+                    if 'user' not in event or event['user'] != slack.authed_user_id:
+                        continue
 
-                    parse_command(event)
-        except KeyboardInterrupt:
-            if config.debug_mode:
-                sc.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (SIGINT)')
+                parse_command(event)
+    except KeyboardInterrupt:
+        if config.debug_mode:
+            slack.client.api_call('chat.postMessage', channel='#bottesting', text='I\'m dead! (SIGINT)')
 
 
 if __name__ == '__main__':
