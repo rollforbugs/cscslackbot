@@ -10,4 +10,6 @@ class EchoCommand(Command):
         slack.send_message(event['channel'], args)
         log_info('Responding to echo')
 
-register_plugin(EchoCommand())
+register_plugin(EchoCommand(
+    help_text='Echoes a message back'
+))

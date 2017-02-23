@@ -15,4 +15,6 @@ class SlapCommand(Command):
         slack.send_message(event['channel'], slapped)
         log_info('Responding to slap')
 
-register_plugin(SlapCommand())
+register_plugin(SlapCommand(
+    help_text='Slaps a user'
+))

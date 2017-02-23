@@ -11,4 +11,6 @@ class IdentifyCommand(Command):
                            '{}\'s bot, reporting in'.format(slack.authed_user))
         log_info('Responding to identify')
 
-register_plugin(IdentifyCommand())
+register_plugin(IdentifyCommand(
+    help_text='Identifies the responding bot'
+))

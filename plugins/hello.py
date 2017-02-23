@@ -14,4 +14,6 @@ class HelloCommand(Command):
         slack.send_message(event['channel'], greeting)
         log_info('Responding to hello')
 
-register_plugin(HelloCommand())
+register_plugin(HelloCommand(
+    help_text='Sends you a friendly welcome!'
+))
