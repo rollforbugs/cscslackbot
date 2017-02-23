@@ -1,14 +1,39 @@
+from __future__ import print_function
 from __future__ import unicode_literals
+
+import sys
+import tweepy
 from slackclient import SlackClient
+
 import config
 import secrets
+import twitter
 from cscslackbot.utils.logging import log_info
 
+# Configure slack api
 sc = SlackClient(secrets.SLACK_API_KEY)
 channels = sc.api_call('channels.list', exclude_archived=1)
 authed_user = ''
 authed_user_id = ''
 
+# Configure twitter api
+using_twiiter = True
+try:
+    consumer_key = secrets.twitter_consumer_key
+    consumer_secret = secrets.twitter_consumer_secret
+    access_token = secrets.twitter_access_token
+    access_secret = secrets.twitter_access_secret
+
+    if "" not in { consumer_key,consumer_secret,access_token,access_secret}:
+        auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+        auth.set_access_token(access_token, access_secret)
+        twitter_api = tweepy.API(auth)
+    else:
+        using_twiiter = False
+
+except AttributeError:
+    print("Update secrets for twitter api", file=sys.stderr)
+    using_twiiter = False
 
 def parse_command(event):
     # Validate event
@@ -21,6 +46,21 @@ def parse_command(event):
 
     # Get the message
     message = event['text'].strip()
+
+    # Extract twitter
+    if using_twiiter:
+        twitter_url = twitter.find_twitter_url(message)
+        if twitter_url:
+            status_id = twitter.parse_status_url(twitter_url)
+            try:
+                tweet = twitter_api.get_status(status_id)
+                msg_out = "".join(["> ", tweet.text,"\n", tweet.display_name, " - ", tweet.created_at[:4]])
+                sc.api_call('chat.postMessage',
+                            channel=event['channel'],
+                            text=msg_out)
+            except tweepy.error.TweepError:
+                pass
+
     # Check if the message is for us
     if not message.startswith(config.prefix):
         return
