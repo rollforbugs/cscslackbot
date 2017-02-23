@@ -7,6 +7,7 @@ import tweepy
 import config
 import secrets
 import twitter
+import cscslackbot.plugins as plugins
 import cscslackbot.slack as slack
 from cscslackbot.utils.logging import log_info, log_error
 
@@ -31,6 +32,7 @@ except AttributeError:
 
 
 def parse_command(event):
+    plugins.plugins_process_event(event)
     # Validate event
     if 'type' not in event:
         return
@@ -103,6 +105,8 @@ def run():
     if not slack.connect():
         log_error('Cannot connect to Slack. Please verify your token in the config.')
         return
+
+    plugins.load_plugins()
 
     if config.debug_mode:
         slack.client.api_call('chat.postMessage',
