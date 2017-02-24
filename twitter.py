@@ -71,4 +71,4 @@ if __name__ == "__main__":
         tweet = twitter_api.get_status(status)
         print(tweet.created_at)
     except tweepy.error.TweepError:
-        print "passed"
+        print("passed")
