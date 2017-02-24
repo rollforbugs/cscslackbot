@@ -37,7 +37,7 @@ def make_help_string(plugin):
 
 class HelpCommand(Command):
     name = 'help'
-    help_text = 'Displays help for plugins'
+    help_text = 'Displays help for plugins in DM'
     help_para = '''Displays short help for all command plugins when run without arguments.
 Displays long help for a specific plugin when given that plugin as an argument.'''
 
@@ -53,5 +53,5 @@ Displays long help for a specific plugin when given that plugin as an argument.'
                         help_text = '`{}`:\n{}'.format(plugin.name, plugin.help_para)
                     break
 
-        slack.send_message(event['channel'], help_text)
+        slack.send_message(event['user'], help_text)
         log_info('Responding to cry for help')

@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from slackclient import SlackClient
 from cscslackbot.utils.logging import log_error, log_info
+import config
 import secrets
 
 authed_user = ''
@@ -42,6 +43,7 @@ def send_message(channel, message, **kwargs):
     return client.api_call('chat.postMessage',
                            channel=channel,
                            text=message,
+                           as_user=not config.debug_mode,
                            **kwargs)
 
 
