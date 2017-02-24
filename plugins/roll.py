@@ -25,6 +25,8 @@ class HelloCommand(Command):
         else:
             # Get number of dice and faces in XdY notation
             count, d, faces = args.partition('d')
+            if count == '':
+                count = '1'
             if not (count.isdigit() and faces.isdigit()):
                 slack.send_message(
                     event['channel'],
@@ -73,7 +75,8 @@ class HelloCommand(Command):
                 rolls.append(randint(1, faces))
 
             message = template.format(count, faces, sum(rolls))
-            if count > 1:
+            # Show specific rolls if it wouldn't take up too much space
+            if count > 1 and len(str(rolls)) < 150:
                 message += ' ({})'.format(str(rolls))
 
             slack.send_message(event['channel'], message)
