@@ -1,3 +1,11 @@
 prefix = '!'
 time_format = '%Y-%m-%d %H:%M:%S'
 debug_mode = True
+plugin_dir = 'plugins'
+plugins = [
+    'echo',
+    'hello',
+    'help',
+    'identify',
+    'slap',
+]

@@ -1,36 +1,44 @@
 from __future__ import unicode_literals
 
 from importlib import import_module
+from cscslackbot.utils.logging import log_info
 
 import config
 
-plugins = []
+
+# http://martyalchin.com/2008/jan/10/simple-plugin-framework/
+class PluginLoader(type):
+    def __init__(cls, name, bases, attrs):
+        if not hasattr(cls, 'plugins'):
+            cls.plugins = []
+        else:
+            if hasattr(cls, 'name'):
+                log_info('Loading plugin {}'.format(cls.name))
+                cls.plugins.append(cls())
+            else:
+                log_info('Loading plugin template {}'.format(cls.__name__))
 
 
 class Plugin(object):
-    def __init__(self, name=None):
-        self.name = name
-        self.plugin_path = __file__
-
-        if self.name is None:
-            self.name = type(self).__module__.rsplit('.', 1)[1]
-
-    def process_event(self, event):
-        pass
+    # A plugin is expected to provide the following attributes:
+    # name:          A short name for the plugin (module name if not given)
+    # help_text:     [optional] A short string describing use of the plugin
+    # help_para:     [optional] A full description of how to use the plugin
+    #
+    # process_event: [optional] A function to be called when a Slack event occurs
+    __metaclass__ = PluginLoader
 
 
 class Command(Plugin):
-    def __init__(self, command=None, help_text=None):
+    # A plugin is expected to provide the following *additional* attributes:
+    # command:         [optional] The command to respond to (copies name if not given)
+    #
+    # process_command: [optional] A function to be called when the command is given
+    def __init__(self):
         super(Command, self).__init__()
 
-        self.command = command
-        self.help_text = help_text
-
-        if self.command is None:
+        if not hasattr(self, 'command'):
             self.command = self.name
-
-        if self.help_text is None:
-            self.help_text = 'There is no help for `{}`'.format(self.command)
 
     def process_event(self, event):
         # Validate event
@@ -53,19 +61,17 @@ class Command(Plugin):
         args = message[len(command_prefix):].strip()
         self.process_command(event, args=args)
 
-    def process_command(self, event, args=None):
+    def process_command(self, event, args):
         pass
 
 
-def register_plugin(plugin):
-    plugins.append(plugin)
-
-
 def load_plugins():
+    plugin_module = config.plugin_dir.replace('/', '.')
     for plugin in config.plugins:
-        cls = import_module(plugin)
+        import_module('{}.{}'.format(plugin_module, plugin))
 
 
 def plugins_process_event(event):
-    for p in plugins:
-        p.process_event(event)
+    for p in Plugin.plugins:
+        if hasattr(p, 'process_event'):
+            p.process_event(event)
