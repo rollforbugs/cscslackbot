@@ -18,11 +18,6 @@ def run():
 
     plugins.load_plugins()
 
-    if config.debug_mode:
-        slack.client.api_call('chat.postMessage',
-                              channel='#bottesting',
-                              text='{} is now testing.'.format(slack.authed_user))
-
     try:
         while True:
             events = slack.get_event()
@@ -41,9 +36,7 @@ def run():
 
                 parse_command(event)
     except KeyboardInterrupt:
-        if config.debug_mode:
-            slack.send_message('#bottesting', 'I\'m dead! (SIGINT)')
-
+        log_info('Shutting down.')
 
 if __name__ == '__main__':
     run()
