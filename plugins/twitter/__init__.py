@@ -34,8 +34,6 @@ class TwitterPlugin(Plugin):
 
     def process_event(self, event):
         # Validate event
-        if 'type' not in event:
-            return
         if event['type'] != 'message':
             return
         if 'text' not in event:
