@@ -53,22 +53,22 @@ def parse_status_url(url):
 
 
 # test
+if __name__ == "__main__":
+    consumer_key = secrets.twitter_consumer_key
+    consumer_secret = secrets.twitter_consumer_secret
 
-consumer_key = secrets.twitter_consumer_key
-consumer_secret = secrets.twitter_consumer_secret
+    access_token = secrets.twitter_access_token
+    access_secret = secrets.twitter_access_secret
 
-access_token = secrets.twitter_access_token
-access_secret = secrets.twitter_access_secret
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_token, access_secret)
+    twitter_api = tweepy.API(auth)
 
-auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-auth.set_access_token(access_token, access_secret)
-twitter_api = tweepy.API(auth)
+    url = "https://twitter.com/SwiftOnSecurity/status/834639723318611969"
 
-url = "https://twitter.com/SwiftOnSecurity/status/834639723318611969"
-
-status = parse_status_url(url)
-try:
-    tweet = twitter_api.get_status(status)
-    print(tweet.created_at)
-except tweepy.error.TweepError:
-    print "passed"
+    status = parse_status_url(url)
+    try:
+        tweet = twitter_api.get_status(status)
+        print(tweet.created_at)
+    except tweepy.error.TweepError:
+        print "passed"
