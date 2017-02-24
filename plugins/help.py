@@ -2,8 +2,37 @@ from __future__ import unicode_literals
 
 import config
 import cscslackbot.slack as slack
-from cscslackbot.plugins import Command
+from cscslackbot.plugins import Command, Plugin
 from cscslackbot.utils.logging import log_info
+
+
+def make_help_string(plugin):
+    if isinstance(plugin, Command):
+        if hasattr(plugin, 'help_text'):
+            string = 'Command: `{}{}` {}'.format(
+                config.prefix,
+                plugin.command,
+                plugin.help_text
+            )
+        else:
+            string = 'Command: `{}{}` {}'.format(
+                config.prefix,
+                plugin.command,
+                'Help is missing for this command.'
+            )
+    else:
+        if hasattr(plugin, 'help_text'):
+            string = 'Plugin: `{}` {}'.format(
+                plugin.name,
+                plugin.help_text
+            )
+        else:
+            string = 'Plugin: `{}` {}'.format(
+                plugin.name,
+                'Help is missing for this plugin.'
+            )
+
+    return string
 
 
 class HelpCommand(Command):
@@ -13,17 +42,9 @@ class HelpCommand(Command):
 Displays long help for a specific plugin when given that plugin as an argument.'''
 
     def process_command(self, event, args):
-        help_text = ''
         if args == '':
-            help_text = 'I support the following commands:\n'
-            for plugin in Command.plugins:
-                if hasattr(plugin, 'command'):
-                    help_text += '`{}{}` '.format(config.prefix, plugin.command)
-                    if hasattr(plugin, 'help_text'):
-                        help_text += plugin.help_text
-                    else:
-                        help_text += 'Help is missing for this command.'
-                    help_text += '\n'
+            help_text = 'I have the following plugins enabled:'
+            help_text += '\n'.join([make_help_string(plugin) for plugin in Plugin.plugins])
         else:
             help_text = 'No extended help for `{}`'.format(args)
             for plugin in Command.plugins:
@@ -33,4 +54,4 @@ Displays long help for a specific plugin when given that plugin as an argument.'
                     break
 
         slack.send_message(event['channel'], help_text)
-        log_info('Responding to help')
+        log_info('Responding to cry for help')
