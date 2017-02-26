@@ -8,4 +8,5 @@ plugins = [
     'help',
     'identify',
     'slap',
+    'uptime'
 ]
