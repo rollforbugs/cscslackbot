@@ -1,26 +1,35 @@
 #!/bin/bash
 
+#pwd = git project root
+
 ## referance
 # http://codeinthehole.com/writing/tips-for-using-a-git-pre-commit-hook/
 # https://git-scm.com/book/en/v2/Customizing-Git-Git-Hooks
 
 ## Install
 #` cd .git/hooks `
-#` ln -sf ../../pre-commit pre-commit ` 
+#` ln -sf ../../dev/pre-commit pre-commit ` 
 #
 # Or use `pre-push` because git stash can be slow.
+# Note: On windows/git bash, `ln` does not make links.
 
-echo "pre commit hook"
-
+echo "hook $0"
+ 
+#Ensure the test is only running on commited code
+#Make sure there is something to stash
+touch temporarydirtyfile
 git stash -q --keep-index
 
 #run test
 
-python test.py
+python ./dev/test.py
 RESULT=$?
 
+# Restore stash
 git stash pop -q
+rm temporarydirtyfile
 
+# Check test error code
 [ $RESULT -ne 0 ] && exit 1
 
 exit 0
