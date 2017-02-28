@@ -1,6 +1,8 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import time
+
 import config
 import cscslackbot.plugins as plugins
 import cscslackbot.slack as slack
@@ -35,6 +37,9 @@ def run():
                         continue
 
                 parse_command(event)
+
+            # Don't hog the CPU busy-waiting
+            time.sleep(0.1)
     except KeyboardInterrupt:
         log_info('Shutting down.')
 
