@@ -1,9 +1,11 @@
 from __future__ import unicode_literals
 
 from importlib import import_module
-from cscslackbot.utils.logging import log_info
+
+from six import with_metaclass
 
 import config
+from cscslackbot.utils.logging import log_info
 
 
 # http://martyalchin.com/2008/jan/10/simple-plugin-framework/
@@ -19,14 +21,14 @@ class PluginLoader(type):
                 log_info('Loading plugin template {}'.format(cls.__name__))
 
 
-class Plugin(object):
+class Plugin(with_metaclass(PluginLoader, object)):
     # A plugin is expected to provide the following attributes:
     # name:          A short name for the plugin (module name if not given)
     # help_text:     [optional] A short string describing use of the plugin
     # help_para:     [optional] A full description of how to use the plugin
     #
     # process_event: [optional] A function to be called when a Slack event occurs
-    __metaclass__ = PluginLoader
+    pass
 
 
 class Command(Plugin):
