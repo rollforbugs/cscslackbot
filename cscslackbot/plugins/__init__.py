@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 from importlib import import_module
 
 from six import with_metaclass
+import os
 
-import config
+from cscslackbot.config import config, load_config_defaults
 from cscslackbot.utils.logging import log_info
 
 
@@ -17,6 +18,8 @@ class PluginLoader(type):
             if hasattr(cls, 'name'):
                 log_info('Loading plugin {}'.format(cls.name))
                 cls.plugins.append(cls())
+                # Give the plugin easy access to its own config
+                cls.config = config[cls.name]
             else:
                 log_info('Loading plugin template {}'.format(cls.__name__))
 
@@ -53,7 +56,7 @@ class Command(Plugin):
         message = event['text'].strip()
 
         # Check if the message is calling this command
-        command_prefix = config.prefix + self.command
+        command_prefix = config['prefix'] + self.command
         if not message.startswith(command_prefix):
             return
 
@@ -66,8 +69,16 @@ class Command(Plugin):
 
 
 def load_plugins():
-    plugin_module = config.plugin_dir.replace('/', '.')
-    for plugin in config.plugins:
+    plugin_module = config['plugin_dir'].replace('/', '.')
+    for plugin in config['plugins']:
+        # Try to load config defaults
+        config_spec_file = '{}/{}/defaults.ini'.format(config['plugin_dir'], plugin)
+        if os.path.exists(config_spec_file):
+            load_config_defaults(spec_file=config_spec_file, section=plugin)
+        else:
+            load_config_defaults(section=plugin)
+
+        # Load the module
         import_module('{}.{}'.format(plugin_module, plugin))
 
 

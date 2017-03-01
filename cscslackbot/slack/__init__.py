@@ -1,8 +1,9 @@
 from __future__ import unicode_literals
+
 from slackclient import SlackClient
-from cscslackbot.utils.logging import log_error, log_info
-import config
-import secrets
+
+from cscslackbot.config import config, secrets
+from cscslackbot.utils.logging import log_error
 
 authed_user = ''
 authed_user_id = ''
@@ -10,7 +11,7 @@ authed_team = ''
 authed_team_id = ''
 authed_team_url = ''
 channels = []
-client = SlackClient(secrets.SLACK_API_KEY)
+client = SlackClient(secrets['SLACK_API_KEY'])
 
 
 def connect():
@@ -20,7 +21,7 @@ def connect():
     global channels
 
     # Try to connect to Slack
-    test_result = client.api_call('auth.test', token=secrets.SLACK_API_KEY)
+    test_result = client.api_call('auth.test', token=secrets['SLACK_API_KEY'])
     if not test_result['ok']:
         log_error('Could not connect to Slack! ({})'.format(test_result['error']))
         return False
@@ -43,7 +44,7 @@ def send_message(channel, message, **kwargs):
     return client.api_call('chat.postMessage',
                            channel=channel,
                            text=message,
-                           as_user=not config.debug_mode,
+                           as_user=not config['debug_mode'],
                            **kwargs)
 
 

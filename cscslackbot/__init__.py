@@ -3,9 +3,9 @@ from __future__ import unicode_literals
 
 import time
 
-import config
 import cscslackbot.plugins as plugins
 import cscslackbot.slack as slack
+from cscslackbot.config import config, load_config, load_secrets
 from cscslackbot.utils.logging import log_info, log_error
 
 
@@ -26,7 +26,7 @@ def run():
             for event in events:
                 log_info(str(event))
 
-                if config.debug_mode:
+                if config['debug_mode']:
                     # Whitelist #bottesting
                     if 'channel' not in event:
                         continue

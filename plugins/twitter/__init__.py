@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 import tweepy
 
 import cscslackbot.slack as slack
-import secrets
+from cscslackbot.config import secrets
 from cscslackbot.plugins import Plugin
 from cscslackbot.utils.logging import log_error
 from . import twitter
@@ -11,10 +11,10 @@ from . import twitter
 # Configure twitter api
 using_twitter = True
 try:
-    consumer_key = secrets.twitter_consumer_key
-    consumer_secret = secrets.twitter_consumer_secret
-    access_token = secrets.twitter_access_token
-    access_secret = secrets.twitter_access_secret
+    consumer_key = secrets['twitter_consumer_key']
+    consumer_secret = secrets['twitter_consumer_secret']
+    access_token = secrets['twitter_access_token']
+    access_secret = secrets['twitter_access_secret']
 
     if "" not in {consumer_key, consumer_secret, access_token, access_secret}:
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
