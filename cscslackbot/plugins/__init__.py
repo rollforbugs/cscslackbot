@@ -56,7 +56,7 @@ class Command(Plugin):
         message = event['text'].strip()
 
         # Check if the message is calling this command
-        command_prefix = config['prefix'] + self.command
+        command_prefix = config['commands']['prefix'] + self.command
         if not message.startswith(command_prefix):
             return
 

@@ -15,5 +15,5 @@ class UptimeCommand(Command):
         diff = now - start_time
 
         resp = "Bot has been up since {} ({})"\
-            .format(start_time.strftime("%c"), str(diff).split(".")[0])
+            .format(start_time.strftime(self.config['time_format']), str(diff).split(".")[0])
         slack.send_message(event['channel'], resp)

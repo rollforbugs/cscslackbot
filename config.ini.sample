@@ -2,5 +2,5 @@
 plugins = 'echo', 'uptime', 'twitter'
 
 # Plugins have their own sections based on their names
-[twitter]
-test = False
+[uptime]
+time_format = '%c'
