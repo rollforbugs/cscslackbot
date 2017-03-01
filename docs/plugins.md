@@ -51,8 +51,8 @@ Note the four attributes on the class:
 
 This is a required attribute for **ALL** plugins.
 
-The name should probably match the name of the module you're developing the
-plugin in, but it doesn't _need_ to.
+The name should match the name of the module you're developing the plugin in.
+If it doesn't, the configuration system will break as it is currently written.
 
 _If the name is not present, the system will **not** register the plugin at all,
 but it will be possible to use the class you made as a template.  In fact, this
@@ -162,3 +162,47 @@ This is **not** optional for a command, simply because the entire purpose of
 the `Command` template is to make this a thing.
 
 ---
+
+Configuration
+-------------
+If your plugin relies on configuration values, you should make sure that you
+give it a whole folder for its Python module (placing its code in __init__.py).
+Inside that folder, you can then create a `defaults.ini` file and create an
+appropriate configspec for ConfigObj with the documentation
+[here](http://configobj.readthedocs.io/en/latest/configobj.html#validation).
+
+Every value you expect to use should have a default defined in `defaults.ini`.
+If a user wants to override a value in your configuration, they only need to
+create a section in the global `config.ini` with the name of your plugin and
+override the default values there.
+
+For example, your `defaults.ini` for `AwesomePlugin` might look like this:
+```ini
+option1 = integer(0, 100, default=42)
+option2 = string(min=32, max=32, default=None)
+```
+and the `config.ini` file would contain the following to override `option1`:
+```ini
+# Other config options
+...
+[awesome]
+option1 = 51
+```
+
+Note how you do _not_ specify the section in your `defaults.ini`. That is
+handled by the plugin system automatically for you.
+
+The plugin system will also automatically give your plugin direct access to its
+section through the `ClassName.config` / `self.config` attribute.
+However, this will only work after the class is defined (and therefore loaded),
+which makes it great for use in `process_event` or similar, but perhaps not so
+much in setup code.
+
+You can access the global config (and/or secrets) if you really need to by using
+```python
+from cscslackbot.config import config, secrets
+```
+Your config would then be available as
+```python
+config['awesome'] # where 'awesome' is your plugin's name
+```
