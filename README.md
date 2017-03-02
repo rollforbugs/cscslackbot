@@ -31,9 +31,9 @@ is not working.
 
 After setting up the virtual environment, run `pip install -r requirements.txt`.
 
-Make sure to copy `secrets.ini.sample` to `secrets.ini` and get a testing API
+Make sure to copy `secrets.yml.sample` to `secrets.yml` and get a testing API
 key from [here](https://api.slack.com/docs/oauth-test-tokens). You'll want to
-put that key into the appropriate place in `secrets.ini`. The bot won't really
+put that key into the appropriate place in `secrets.yml`. The bot won't really
 work all that well without a Slack API key.
 
 After all that, you can just run `python2 run.py`, `python3 run.py`, or
