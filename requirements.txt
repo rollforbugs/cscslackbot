@@ -1,10 +1,4 @@
-# configobj and validate are both provided by the URL below.
-# The version of validate currently in PyPI is broken.
-# If that changes, use the package names instead of the URL.
-##configobj==5.0.6
-##validate==1.0.1
-https://github.com/DiffSK/configobj/archive/v5.0.6.zip
-
+pyyaml==3.12
 requests==2.13.0
 six==1.10.0
 slackclient==1.0.5

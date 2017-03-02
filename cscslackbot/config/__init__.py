@@ -3,63 +3,72 @@ from __future__ import print_function
 
 import os.path
 import sys
-
-from configobj import ConfigObj
-from validate import Validator
-
-_validator = Validator()
-config = ConfigObj(encoding='UTF8')
-secrets = ConfigObj(encoding='UTF8')
+import yaml
 
 
-def load_config(config_file, spec_file=None, section=None):
+config = {}
+secrets = {}
+
+
+def _dict_merge(merged, source, overwrite=False):
+    for k in source.keys():
+        if k not in merged:
+            merged[k] = source[k]
+        elif overwrite:
+            merged[k] = source[k]
+
+
+def load_config(config_file, defaults_file=None, section=None):
     global config
-    load_config_defaults(spec_file=spec_file, section=section)
+    load_config_defaults(defaults_file=defaults_file, section=section)
 
-    loaded = ConfigObj(config_file, configspec=spec_file, encoding='UTF8', create_empty=True)
-    loaded.validate(_validator)
+    with open(config_file, 'r') as f:
+        loaded = yaml.safe_load(f)
 
     if section is None:
-        config.merge(loaded)
+        _dict_merge(config, loaded, overwrite=True)
+    elif section in config:
+        _dict_merge(config[section], loaded, overwrite=True)
     else:
-        config[section].merge(loaded)
+        config[section] = loaded
 
 
-def load_config_defaults(spec_file=None, section=None):
+def load_config_defaults(defaults_file=None, section=None):
     global config
-    if spec_file is None:
+
+    if defaults_file is None:
         # Create an empty configuration section
-        loaded = ConfigObj(encoding='UTF8')
+        loaded = {}
     else:
         # Create a config section using the spec file
-        loaded = ConfigObj(configspec=spec_file, encoding='UTF8')
-        loaded.validate(_validator)
+        with open(defaults_file, 'r') as f:
+            loaded = yaml.safe_load(f)
 
     if section is None:
         # Merge into base config
-        config.merge(loaded)
+        _dict_merge(config, loaded, overwrite=False)
+    elif section in config:
+        _dict_merge(config[section], loaded, overwrite=False)
     else:
-        # Merge old entries if applicable then set section
-        if section in config:
-            loaded.merge(config[section])
         config[section] = loaded
 
 
 def load_secrets(secrets_file):
     global secrets
-    secrets = ConfigObj(secrets_file, encoding='UTF8')
+    with open(secrets_file, 'r') as f:
+        secrets = yaml.safe_load(f)
 
 
 cannot_load_config = False
 # config.ini is created if it doesn't exist
-if not os.path.exists('defaults.ini'):
-    print("Please make sure 'defaults.ini' exists.", file=sys.stderr)
+if not os.path.exists('defaults.yml'):
+    print("Please make sure 'defaults.yml' exists.", file=sys.stderr)
     cannot_load_config = True
-if not os.path.exists('secrets.ini'):
-    print("Please make sure 'secrets.ini' exists.", file=sys.stderr)
+if not os.path.exists('secrets.yml'):
+    print("Please make sure 'secrets.yml' exists.", file=sys.stderr)
     cannot_load_config = True
 if cannot_load_config:
     exit()
 
-load_config('config.ini', 'defaults.ini')
-load_secrets('secrets.ini')
+load_config('config.yml', 'defaults.yml')
+load_secrets('secrets.yml')

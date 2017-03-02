@@ -1,6 +1,11 @@
 # Replace values in defaults.ini
-plugins = 'echo', 'uptime', 'twitter'
+plugins: [
+  'echo',
+  'uptime',
+  'twitter',
+]
 
 # Plugins have their own sections based on their names
-[uptime]
-time_format = '%c'
+uptime: {
+  time_format: '%c'
+}

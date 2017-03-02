@@ -1,0 +1,11 @@
+debug_mode: true
+plugin_dir: 'plugins'
+plugins: []
+
+logging: {
+  time_format: '%Y-%m-%d %H:%M:%S'
+}
+
+commands: {
+  prefix: '!'
+}

@@ -72,9 +72,9 @@ def load_plugins():
     plugin_module = config['plugin_dir'].replace('/', '.')
     for plugin in config['plugins']:
         # Try to load config defaults
-        config_spec_file = '{}/{}/defaults.ini'.format(config['plugin_dir'], plugin)
-        if os.path.exists(config_spec_file):
-            load_config_defaults(spec_file=config_spec_file, section=plugin)
+        defaults_file = '{}/{}/defaults.yml'.format(config['plugin_dir'], plugin)
+        if os.path.exists(defaults_file):
+            load_config_defaults(defaults_file, section=plugin)
         else:
             load_config_defaults(section=plugin)
 

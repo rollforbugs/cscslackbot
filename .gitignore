@@ -1,7 +1,7 @@
 # Secret keys
-secrets.ini
+secrets.yml
 # Per-user files
-config.ini
+config.yml
 
 # Python files
 *.pyc
