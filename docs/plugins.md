@@ -167,29 +167,59 @@ Configuration
 -------------
 If your plugin relies on configuration values, you should make sure that you
 give it a whole folder for its Python module (placing its code in __init__.py).
-Inside that folder, you can then create a `defaults.ini` file and create an
-appropriate configspec for ConfigObj with the documentation
-[here](http://configobj.readthedocs.io/en/latest/configobj.html#validation).
+Inside that folder, you can then create a `defaults.yml` file and fill it in
+with an appropriate set of defaults.
 
-Every value you expect to use should have a default defined in `defaults.ini`.
+This should be a standard YAML file and you can find a bunch of examples of
+YAML syntax online. However, it is largely the same as JSON, with a bunch of
+additional options available, including comments. To be safe, I would recommend
+writing your configuration files as if they were simply JSON.
+
 If a user wants to override a value in your configuration, they only need to
-create a section in the global `config.ini` with the name of your plugin and
+create a dictionary in the global `config.yml` with the name of your plugin and
 override the default values there.
 
-For example, your `defaults.ini` for `AwesomePlugin` might look like this:
-```ini
-option1 = integer(0, 100, default=42)
-option2 = string(min=32, max=32, default=None)
+For example, your `defaults.yml` for `AwesomePlugin` might look like this:
+```yaml
+# I'm a comment!
+integer_value: 42
+float_value: 2.12
+string_value: test string
+another_string: 'i have quotes'
+boolean_value: true
+dict_value:
+  key1: value1
+  key2: value2
+  nested_dict:
+    key3: value3
+dict_but_like_json: {
+  'key1': 'value1',
+  'key2': 'value2',
+  'nested_dict': {
+    'key3': 'value3'
+  }
+}
+list_value: [
+  item1,
+  item2,
+]
+another_list:
+- item1
+- - subitem1 # First - creates a list item, second starts the sublist
+  - subitem2
+- item2
 ```
-and the `config.ini` file would contain the following to override `option1`:
-```ini
-# Other config options
-...
-[awesome]
-option1 = 51
+and the `config.yml` file might contain the following to override `list_value`
+and `integer_value`:
+```yaml
+# Other config options here
+awesome: {
+  integer_value: 57,
+  list_value: [item3, item4],
+}
 ```
 
-Note how you do _not_ specify the section in your `defaults.ini`. That is
+Note how you do _not_ specify the section in your `defaults.yml`. That is
 handled by the plugin system automatically for you.
 
 The plugin system will also automatically give your plugin direct access to its
