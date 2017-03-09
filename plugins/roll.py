@@ -101,7 +101,5 @@ def approximate_roll(m, n):
     return v
 
 
-# [approximate_roll(6,6) for x in range(10)]
-
 def clamp(x, lower, upper):
     return lower if x < lower else upper if x > upper else x
