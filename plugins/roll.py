@@ -1,9 +1,8 @@
 from __future__ import unicode_literals
 
 import math
+import re
 from random import randint, gauss
-
-from builtins import range
 
 import cscslackbot.slack as slack
 from cscslackbot.plugins import Command
@@ -12,6 +11,7 @@ MAX_COUNT = 1e4
 REASONABLE_COUNT = 1e3
 MAX_FACES = 1e10
 REASONABLE_FACES = 1e5
+XDY_REGEX = re.compile(r'([0-9]+)?d([0-9]+)', re.IGNORECASE)
 
 
 class HelloCommand(Command):
@@ -28,19 +28,22 @@ class HelloCommand(Command):
             return
         else:
             # Get number of dice and faces in XdY notation
-            count, d, faces = args.partition('d')
-            if count == '':
-                count = '1'
-            if not (count.isdigit() and faces.isdigit()):
+            xdy = XDY_REGEX.search(args)
+            if not xdy:
                 slack.send_message(
                     event['channel'],
-                    "I don't know how to roll a {}".format(args)
+                    "What did you want me to roll?"
                 )
                 return
 
-            # Convert to numbers
-            count = int(count)
+            # Extract count and faces
+            count, faces = xdy.groups()
+            if count:
+                count = int(count)
+            else:
+                count = 1
             faces = int(faces)
+
             # Prevent abuse
             msg = None
             if count > MAX_COUNT or faces > MAX_FACES:
