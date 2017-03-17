@@ -1,0 +1,5 @@
+max_count: 1000000000
+reasonable_count: 100
+displayable_count: 10
+max_faces: 1000000000
+reasonable_faces: 1000

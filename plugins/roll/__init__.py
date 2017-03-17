@@ -9,10 +9,6 @@ from builtins import range
 import cscslackbot.slack as slack
 from cscslackbot.plugins import Command
 
-MAX_COUNT = 1e4
-REASONABLE_COUNT = 1e3
-MAX_FACES = 1e10
-REASONABLE_FACES = 1e5
 XDY_REGEX = re.compile(r'([0-9]+)?d([0-9]+)', re.IGNORECASE)
 
 
@@ -48,11 +44,11 @@ class HelloCommand(Command):
 
             # Prevent abuse
             msg = None
-            if count > MAX_COUNT or faces > MAX_FACES:
+            if count > self.config['max_count'] or faces > self.config['max_faces']:
                 msg = "Jesus christ calm your shit"
-            elif faces > REASONABLE_FACES:
+            elif faces > self.config['reasonable_faces']:
                 msg = "What do you picture these dice even look like?"
-            elif count > REASONABLE_COUNT:
+            elif count > self.config['reasonable_count']:
                 msg = "There's a limit to the number of dice I can fit in my hand"
             elif count == 0 or faces in (0, 1):
                 msg = "What possible use would rolling that have?"
@@ -63,15 +59,20 @@ class HelloCommand(Command):
                 return
 
             # Roll!
-            rolls = [randint(1, faces) for i in range(count)]
 
-            message = template.format(count, faces, sum(rolls))
-            # Show specific rolls if it wouldn't take up too much space
-            # Setting a max count would be more performant
-            roll_rep = str(rolls)
-            if count > 1 and len(roll_rep) < 150:
-                message += ' {}'.format(roll_rep)
+            if count == 1:
+                # Only roll one die
+                value = randint(1, faces)
+            elif count <= self.config['displayable_count']:
+                # Show specific rolls
+                rolls = [randint(1, faces) for i in range(count)]
+                value = sum(rolls)
+                template += ' {}'.format(rolls)
+            else:
+                # Use probability distribution
+                value = approximate_roll(count, faces)
 
+            message = template.format(count, faces, value)
             slack.send_message(event['channel'], message)
 
 
