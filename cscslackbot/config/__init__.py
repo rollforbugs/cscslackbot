@@ -23,8 +23,12 @@ def load_config(config_file, defaults_file=None, section=None):
     global config
     load_config_defaults(defaults_file=defaults_file, section=section)
 
+    open(config_file, 'a').close()
     with open(config_file, 'r') as f:
         loaded = yaml.safe_load(f)
+
+    if not loaded:
+        loaded = {}
 
     if section is None:
         _dict_merge(config, loaded, overwrite=True)
