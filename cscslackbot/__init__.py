@@ -1,12 +1,15 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import logging.config
 import time
 
 import cscslackbot.plugins as plugins
 import cscslackbot.slack as slack
 from cscslackbot.config import config, load_config, load_secrets
-from cscslackbot.utils.logging import log_info, log_error
+
+
+logger = logging.getLogger(__name__)
 
 
 def parse_command(event):
@@ -14,9 +17,19 @@ def parse_command(event):
 
 
 def run():
+    # Configure logger
+    if 'logging' in config:
+        logging.config.dictConfig(config['logging'])
+    else:
+        logging.basicConfig()
+
+    logger.info('Starting bot')
+
     if not slack.connect():
-        log_error('Cannot connect to Slack. Please verify your token in the config.')
+        logger.error('Cannot connect to Slack. Please verify your token in the config.')
         return
+    else:
+        logger.info('Connected to Slack')
 
     plugins.load_plugins()
 
@@ -24,7 +37,7 @@ def run():
         while True:
             events = slack.get_event()
             for event in events:
-                log_info(str(event))
+                logger.info(str(event))
 
                 if config['debug_mode']:
                     # Whitelist #bottesting
@@ -41,7 +54,7 @@ def run():
             # Don't hog the CPU busy-waiting
             time.sleep(0.1)
     except KeyboardInterrupt:
-        log_info('Shutting down.')
+        logger.info('Shutting down.')
 
 if __name__ == '__main__':
     run()

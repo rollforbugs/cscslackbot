@@ -1,12 +1,16 @@
 from __future__ import unicode_literals
 
+from logging import getLogger
+
 import tweepy
 
 import cscslackbot.slack as slack
 from cscslackbot.config import secrets
 from cscslackbot.plugins import Plugin
-from cscslackbot.utils.logging import log_error
 from . import twitter
+
+
+logger = getLogger(__name__)
 
 # Configure twitter api
 using_twitter = True
@@ -24,7 +28,7 @@ try:
         using_twitter = False
 
 except AttributeError:
-    log_error('Update secrets for Twitter API')
+    logger.error('Update secrets for Twitter API')
     using_twitter = False
 
 

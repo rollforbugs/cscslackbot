@@ -1,8 +1,9 @@
-from __future__ import unicode_literals
 from __future__ import print_function
+from __future__ import unicode_literals
 
+import logging.config
 import os.path
-import sys
+
 import yaml
 
 
@@ -59,15 +60,16 @@ def load_secrets(secrets_file):
         secrets = yaml.safe_load(f)
 
 
-cannot_load_config = False
+_cannot_load_config = False
 # config.ini is created if it doesn't exist
 if not os.path.exists('defaults.yml'):
-    print("Please make sure 'defaults.yml' exists.", file=sys.stderr)
-    cannot_load_config = True
+    logging.critical("Please make sure 'defaults.yml' exists.")
+    _cannot_load_config = True
 if not os.path.exists('secrets.yml'):
-    print("Please make sure 'secrets.yml' exists.", file=sys.stderr)
-    cannot_load_config = True
-if cannot_load_config:
+    logging.critical("Please make sure 'secrets.yml' exists.")
+    _cannot_load_config = True
+if _cannot_load_config:
+    logging.critical("Could not load configuration files!")
     exit()
 
 load_config('config.yml', 'defaults.yml')

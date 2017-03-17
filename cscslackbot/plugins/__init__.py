@@ -1,12 +1,15 @@
 from __future__ import unicode_literals
 
+import os
 from importlib import import_module
+from logging import getLogger
 
 from six import with_metaclass
-import os
 
 from cscslackbot.config import config, load_config_defaults
-from cscslackbot.utils.logging import log_info
+
+
+logger = getLogger(__name__)
 
 
 # http://martyalchin.com/2008/jan/10/simple-plugin-framework/
@@ -16,12 +19,12 @@ class PluginLoader(type):
             cls.plugins = []
         else:
             if hasattr(cls, 'name'):
-                log_info('Loading plugin {}'.format(cls.name))
+                logger.info('Loading plugin {}'.format(cls.name))
                 cls.plugins.append(cls())
                 # Give the plugin easy access to its own config
                 cls.config = config[cls.name]
             else:
-                log_info('Loading plugin template {}'.format(cls.__name__))
+                logger.info('Loading plugin template {}'.format(cls.__name__))
 
 
 class Plugin(with_metaclass(PluginLoader, object)):

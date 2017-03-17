@@ -1,9 +1,13 @@
 from __future__ import unicode_literals
 
+from logging import getLogger
+
 from slackclient import SlackClient
 
 from cscslackbot.config import config, secrets
-from cscslackbot.utils.logging import log_error
+
+
+logger = getLogger(__name__)
 
 authed_user = ''
 authed_user_id = ''
@@ -23,11 +27,11 @@ def connect():
     # Try to connect to Slack
     test_result = client.api_call('auth.test', token=secrets['SLACK_API_KEY'])
     if not test_result['ok']:
-        log_error('Could not connect to Slack! ({})'.format(test_result['error']))
+        logger.error('Could not connect to Slack! ({})'.format(test_result['error']))
         return False
 
     if not client.rtm_connect():
-        log_error('Could not connect to RTM API!')
+        logger.error('Could not connect to RTM API!')
         return False
 
     # Connected - set global variables for connection
