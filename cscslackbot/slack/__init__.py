@@ -6,6 +6,7 @@ from slackclient import SlackClient
 
 from cscslackbot.config import config, secrets
 
+from builtins import input
 
 logger = getLogger(__name__)
 
@@ -53,12 +54,29 @@ def connect():
 
 
 def send_message(channel, message, **kwargs):
-    return client.api_call('chat.postMessage',
-                           channel=channel,
-                           text=message,
-                           as_user=not config['debug_mode'],
-                           **kwargs)
+    if mode == MODE_NORMAL:
+        return client.api_call('chat.postMessage',
+                               channel=channel,
+                               text=message,
+                               as_user=not config['debug_mode'],
+                               **kwargs)
+    elif mode == MODE_INTERACTIVE or mode == MODE_SCRIPT:
+        print(message)
 
 
-def get_event():
-    return client.rtm_read()
+def get_events():
+    if mode == MODE_NORMAL:
+        return client.rtm_read()
+    elif mode == MODE_INTERACTIVE:
+        text = input("> ")
+    elif mode == MODE_SCRIPT:
+        # pass
+        text = 'asd'
+    else:
+        print ("Unhandled case!")
+        return
+
+    event = {'type': 'message', 'channel': 'C494WSTUL', 'user': authed_user_id,
+             'text': text}
+
+    return [event]

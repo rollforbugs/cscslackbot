@@ -35,7 +35,7 @@ def run():
 
     try:
         while True:
-            events = slack.get_event()
+            events = slack.get_events()
             for event in events:
                 logger.info(str(event))
 
