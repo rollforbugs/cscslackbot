@@ -8,6 +8,7 @@ from builtins import range
 
 import cscslackbot.slack as slack
 from cscslackbot.plugins import Command
+from cscslackbot.utils import clamp
 
 XDY_REGEX = re.compile(r'([0-9]+)?d([0-9]+)', re.IGNORECASE)
 
@@ -105,7 +106,3 @@ def approximate_roll(m, n):
     v = int(gauss(mu, sigma))
     v = clamp(v, m, m * n)
     return v
-
-
-def clamp(x, lower, upper):
-    return lower if x < lower else upper if x > upper else x
