@@ -1,0 +1,9 @@
+!help
+!roll 3d3
+!slap asdf
+!identify
+!echo assdsf
+!hello
+say what? https://twitter.com/SwiftOnSecurity/status/834639723318611969
+!uptime
+That's all folks

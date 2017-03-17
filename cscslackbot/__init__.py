@@ -8,7 +8,6 @@ import cscslackbot.plugins as plugins
 import cscslackbot.slack as slack
 from cscslackbot.config import config, load_config, load_secrets
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -52,12 +51,18 @@ def run():
                 process_event(event)
 
             # Don't hog the CPU busy-waiting
-            time.sleep(0.1)
+            if slack.mode == slack.MODE_NORMAL:
+                time.sleep(0.1)
+            # INTERACTIVE calls input which blocks
+            elif slack.mode == slack.MODE_SCRIPT:
+                logger.info("End of script")
+                break
     except KeyboardInterrupt:
         logger.info('Shutting down')
     except:
         logger.critical('Uncaught exception!', exc_info=True)
         exit(-1)
+
 
 if __name__ == '__main__':
     run()

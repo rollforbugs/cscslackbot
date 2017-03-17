@@ -16,6 +16,7 @@ MODE_NORMAL = 'NORMAL'
 MODE_INTERACTIVE = 'INTERACTIVE'
 MODE_SCRIPT = 'SCRIPT'
 MODE_OPTIONS = {MODE_NORMAL, MODE_INTERACTIVE, MODE_SCRIPT}
+script_file = ''
 ###
 
 authed_user = ''
@@ -69,14 +70,18 @@ def get_events():
         return client.rtm_read()
     elif mode == MODE_INTERACTIVE:
         text = input("> ")
+        return mock_event(text)
     elif mode == MODE_SCRIPT:
         # pass
-        text = 'asd'
+        with open("dev/scripts/" + script_file) as f:
+            lines = f.readlines()
+            return [mock_event(l) for l in lines]
+
     else:
         print ("Unhandled case!")
         return
 
-    event = {'type': 'message', 'channel': 'C494WSTUL', 'user': authed_user_id,
-             'text': text}
 
-    return [event]
+def mock_event(text):
+    return {'type': 'message', 'channel': 'C494WSTUL', 'user': authed_user_id,
+            'text': text}
