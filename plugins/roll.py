@@ -4,6 +4,8 @@ import math
 import re
 from random import randint, gauss
 
+from builtins import range
+
 import cscslackbot.slack as slack
 from cscslackbot.plugins import Command
 
