@@ -9,6 +9,14 @@ from cscslackbot.config import config, secrets
 
 logger = getLogger(__name__)
 
+###
+mode = None
+MODE_NORMAL = 'NORMAL'
+MODE_INTERACTIVE = 'INTERACTIVE'
+MODE_SCRIPT = 'SCRIPT'
+MODE_OPTIONS = {MODE_NORMAL, MODE_INTERACTIVE, MODE_SCRIPT}
+###
+
 authed_user = ''
 authed_user_id = ''
 authed_team = ''
