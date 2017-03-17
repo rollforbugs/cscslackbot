@@ -55,6 +55,9 @@ def run():
             time.sleep(0.1)
     except KeyboardInterrupt:
         logger.info('Shutting down')
+    except:
+        logger.critical('Uncaught exception!', exc_info=True)
+        exit(-1)
 
 if __name__ == '__main__':
     run()
