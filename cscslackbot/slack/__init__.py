@@ -52,5 +52,12 @@ def send_message(channel, message, **kwargs):
                            **kwargs)
 
 
+def is_own_event(event):
+    if 'user' in event:
+        if event['user'] in (authed_user, authed_user_id):
+            return True
+    return False
+
+
 def get_event():
     return client.rtm_read()
