@@ -5,7 +5,7 @@ from importlib import import_module
 from logging import getLogger
 
 from six import with_metaclass
-
+import cscslackbot.slack as slack
 from cscslackbot.config import config, load_config_defaults
 
 
@@ -54,6 +54,10 @@ class Command(Plugin):
             return
         if 'text' not in event:
             return
+        if not config['debug_mode']:
+            if 'user' in event:
+                if event['user'] in (slack.authed_user, slack.authed_user_id):
+                    return
 
         # Get the message
         message = event['text'].strip()
