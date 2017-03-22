@@ -2,21 +2,27 @@ from __future__ import unicode_literals
 
 from logging import getLogger
 
+from builtins import input
 from slackclient import SlackClient
 
 from cscslackbot.config import config, secrets
 
-from builtins import input
-
 logger = getLogger(__name__)
 
 ###
+
 mode = None
-MODE_NORMAL = 'NORMAL'
-MODE_INTERACTIVE = 'INTERACTIVE'
-MODE_SCRIPT = 'SCRIPT'
-MODE_OPTIONS = {MODE_NORMAL, MODE_INTERACTIVE, MODE_SCRIPT}
 script_file = ''
+
+
+class SlackState(object):
+    MODE_NORMAL = 'NORMAL'
+    MODE_INTERACTIVE = 'INTERACTIVE'
+    MODE_SCRIPT = 'SCRIPT'
+
+    MODE_OPTIONS = {MODE_NORMAL, MODE_INTERACTIVE, MODE_SCRIPT}
+
+
 ###
 
 authed_user = ''
@@ -55,23 +61,23 @@ def connect():
 
 
 def send_message(channel, message, **kwargs):
-    if mode == MODE_NORMAL:
+    if mode == SlackState.MODE_NORMAL:
         return client.api_call('chat.postMessage',
                                channel=channel,
                                text=message,
                                as_user=not config['debug_mode'],
                                **kwargs)
-    elif mode == MODE_INTERACTIVE or mode == MODE_SCRIPT:
+    elif mode == SlackState.MODE_INTERACTIVE or mode == SlackState.MODE_SCRIPT:
         print(message)
 
 
 def get_events():
-    if mode == MODE_NORMAL:
+    if mode == SlackState.MODE_NORMAL:
         return client.rtm_read()
-    elif mode == MODE_INTERACTIVE:
+    elif mode == SlackState.MODE_INTERACTIVE:
         text = input("> ")
         return [mock_event(text)]
-    elif mode == MODE_SCRIPT:
+    elif mode == SlackState.MODE_SCRIPT:
         # pass
         with open("dev/scripts/" + script_file) as f:
             lines = f.readlines()

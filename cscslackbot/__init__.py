@@ -51,10 +51,10 @@ def run():
                 process_event(event)
 
             # Don't hog the CPU busy-waiting
-            if slack.mode == slack.MODE_NORMAL:
+            if slack.mode == slack.SlackState.MODE_NORMAL:
                 time.sleep(0.1)
             # INTERACTIVE calls input which blocks
-            elif slack.mode == slack.MODE_SCRIPT:
+            elif slack.mode == slack.SlackState.MODE_SCRIPT:
                 logger.info("End of script")
                 break
     except KeyboardInterrupt:
@@ -64,5 +64,3 @@ def run():
         exit(-1)
 
 
-if __name__ == '__main__':
-    run()
