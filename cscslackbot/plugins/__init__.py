@@ -7,6 +7,7 @@ from logging import getLogger
 from six import with_metaclass
 
 from cscslackbot.config import config, load_config_defaults
+from cscslackbot.slack import is_own_event
 
 
 logger = getLogger(__name__)
@@ -54,6 +55,9 @@ class Command(Plugin):
             return
         if 'text' not in event:
             return
+        if not config['debug_mode']:
+            if is_own_event(event):
+                return
 
         # Get the message
         message = event['text'].strip()

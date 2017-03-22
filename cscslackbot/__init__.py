@@ -28,7 +28,7 @@ def run():
         logger.error('Cannot connect to Slack. Please verify your token in the config.')
         return
     else:
-        logger.info('Connected to Slack')
+        logger.info('Connected to Slack as {} ({})'.format(slack.authed_user, slack.authed_user_id))
 
     plugins.load_plugins()
 

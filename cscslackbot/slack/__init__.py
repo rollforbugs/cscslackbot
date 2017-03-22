@@ -70,7 +70,7 @@ def get_events():
         return client.rtm_read()
     elif mode == MODE_INTERACTIVE:
         text = input("> ")
-        return mock_event(text)
+        return [mock_event(text)]
     elif mode == MODE_SCRIPT:
         # pass
         with open("dev/scripts/" + script_file) as f:
@@ -85,3 +85,10 @@ def get_events():
 def mock_event(text):
     return {'type': 'message', 'channel': 'C494WSTUL', 'user': authed_user_id,
             'text': text}
+
+
+def is_own_event(event):
+    if 'user' in event:
+        if event['user'] in (authed_user, authed_user_id):
+            return True
+    return False
