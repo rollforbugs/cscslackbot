@@ -53,4 +53,11 @@ def send_message(channel, message, **kwargs):
 
 
 def get_event():
-    return client.rtm_read()
+    try:
+        return client.rtm_read()
+    except WebSocketConnectionClosedException:
+        logger.error('WebSocket connection for RTM API was closed!')
+        if client.rtm_connect():
+            return get_event()
+        logger.critical('Could not reconnect!')
+
