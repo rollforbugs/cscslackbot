@@ -4,6 +4,7 @@ from logging import getLogger
 
 from builtins import input
 from slackclient import SlackClient
+from websocket import WebSocketConnectionClosedException
 
 from cscslackbot.config import config, secrets
 
@@ -72,20 +73,27 @@ def send_message(channel, message, **kwargs):
 
 
 def get_events():
-    if mode == SlackState.MODE_NORMAL:
-        return client.rtm_read()
-    elif mode == SlackState.MODE_INTERACTIVE:
-        text = input("> ")
-        return [mock_event(text)]
-    elif mode == SlackState.MODE_SCRIPT:
-        # pass
-        with open("dev/scripts/" + script_file) as f:
-            lines = f.readlines()
-            return [mock_event(l) for l in lines]
+    try:
+        if mode == SlackState.MODE_NORMAL:
+            return client.rtm_read()
+        elif mode == SlackState.MODE_INTERACTIVE:
+            text = input("> ")
+            return [mock_event(text)]
+        elif mode == SlackState.MODE_SCRIPT:
+            # pass
+            with open("dev/scripts/" + script_file) as f:
+                lines = f.readlines()
+                return [mock_event(l) for l in lines]
 
-    else:
-        print ("Unhandled case!")
-        return
+        else:
+            print ("Unhandled case!")
+            return
+
+    except WebSocketConnectionClosedException:
+        logger.error('WebSocket connection for RTM API was closed!')
+        if client.rtm_connect():
+            return get_events()
+        logger.critical('Could not reconnect!')
 
 
 def mock_event(text):
