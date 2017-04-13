@@ -13,6 +13,9 @@ logger = logging.getLogger(__name__)
 
 
 def process_event(event):
+    if 'type' not in event:
+        logger.error('Received message without type key: {}'.format(event))
+        return
     plugins.plugins_process_event(event)
 
 
