@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from logging import getLogger
 
 from slackclient import SlackClient
+from websocket import WebSocketConnectionClosedException
 
 from cscslackbot.config import config, secrets
 
