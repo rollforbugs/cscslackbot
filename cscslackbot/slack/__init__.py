@@ -61,4 +61,5 @@ def get_event():
         if client.rtm_connect():
             return get_event()
         logger.critical('Could not reconnect!')
-
+    except IOError as e:
+        logger.error('Failed to get events: {}'.format(e))

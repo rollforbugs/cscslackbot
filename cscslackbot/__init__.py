@@ -40,7 +40,7 @@ def run():
         while True:
             events = slack.get_event()
             for event in events:
-                logger.info(str(event))
+                logger.debug(str(event))
 
                 if config['debug_mode']:
                     # Whitelist #bottesting
@@ -58,8 +58,11 @@ def run():
             time.sleep(0.1)
     except KeyboardInterrupt:
         logger.info('Shutting down')
-    except:
-        logger.critical('Uncaught exception!', exc_info=True)
+    except Exception as ex:
+        logger.critical('Uncaught exception! ({})'.format(type(ex).__name__),
+                        exc_info=True)
+        if event:
+            logger.critical('Last event: {}'.format(event))
         exit(-1)
 
 if __name__ == '__main__':
