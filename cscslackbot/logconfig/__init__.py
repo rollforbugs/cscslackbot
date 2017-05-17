@@ -1,6 +1,7 @@
 import logging
 import logging.config
 import logging.handlers
+import six
 import sys
 
 from ..utils import from_human_readable
@@ -10,7 +11,10 @@ def configure(config):
     format = config.get('format', None)
     datefmt = config.get('datefmt', None)
     fmtstyle = config.get('fmtstyle', '%')
-    formatter = logging.Formatter(format, datefmt, fmtstyle)
+    if six.PY2:
+        formatter = logging.Formatter(format, datefmt)
+    else:
+        formatter = logging.Formatter(format, datefmt, fmtstyle)
     handlers = []
 
     # Console handler
