@@ -1,9 +1,10 @@
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import logging.config
+import logging
 import time
 
+import cscslackbot.logconfig as logconfig
 import cscslackbot.plugins as plugins
 import cscslackbot.slack as slack
 from cscslackbot.config import config, load_config, load_secrets
@@ -21,9 +22,7 @@ def process_event(event):
 def run():
     # Configure logger
     if 'logging' in config:
-        logging.config.dictConfig(config['logging'])
-    else:
-        logging.basicConfig()
+        logconfig.configure(config['logging'])
 
     logger.info('Starting bot')
 

@@ -8,49 +8,8 @@ commands:
   prefix: '!'
 
 logging:
-  version: 1
-  disable_existing_loggers: False
-  formatters:
-    simple:
-      format: '%(asctime)s  [%(levelname)s]  %(name)s - %(message)s'
-      datefmt: '%Y-%m-%d %H:%M:%S'
-
-  handlers:
-    console:
-      class: logging.StreamHandler
-      level: DEBUG
-      formatter: simple
-      stream: ext://sys.stdout
-
-    log_file_main:
-      class: logging.handlers.RotatingFileHandler
-      level: INFO
-      formatter: simple
-      filename: main.log
-      maxBytes: 10485760 # 10MB
-      backupCount: 3
-      encoding: utf8
-
-    log_file_error:
-      class: logging.handlers.RotatingFileHandler
-      level: ERROR
-      formatter: simple
-      filename: error.log
-      maxBytes: 10485760 # 10MB
-      backupCount: 3
-      encoding: utf8
-
-  loggers:
-    cscslackbot:
-      level: DEBUG
-      handlers: [console, log_file_main, log_file_error]
-      propagate: false
-
-    plugins:
-      level: DEBUG
-      handlers: [console, log_file_main, log_file_error]
-      propagate: false
-
-  root:
-    level: INFO
-    handlers: [console, log_file_main, log_file_error]
+  format: '%(asctime)s  [%(levelname)s]  %(name)s - %(message)s'
+  datefmt: '%Y-%m-%d %H:%M:%S'
+  console:
+    level: DEBUG
+  files: []

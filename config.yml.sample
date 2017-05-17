@@ -5,6 +5,17 @@ plugins: [
   'twitter',
 ]
 
+logging:
+  files:
+    'main.log':
+      level: INFO
+      maxsize: 1M
+      count: 3
+    'error.log':
+      level: ERROR
+      maxsize: 1M
+      count: 3
+
 # Plugins have their own sections based on their names
 uptime: {
   time_format: '%c'

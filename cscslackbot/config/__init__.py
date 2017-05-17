@@ -15,6 +15,8 @@ def _dict_merge(merged, source, overwrite=False):
     for k in source.keys():
         if k not in merged:
             merged[k] = source[k]
+        elif isinstance(merged[k], dict) and isinstance(source[k], dict):
+            _dict_merge(merged[k], source[k], overwrite=overwrite)
         elif overwrite:
             merged[k] = source[k]
 
