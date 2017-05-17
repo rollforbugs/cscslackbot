@@ -1,7 +1,6 @@
 import logging
 import logging.config
 import logging.handlers
-import six
 import sys
 
 from ..utils import from_human_readable
@@ -35,4 +34,3 @@ def configure(config):
     logging.getLogger().setLevel(logging.DEBUG)
     for h in handlers:
         logging.getLogger().addHandler(h)
-        print(h)
