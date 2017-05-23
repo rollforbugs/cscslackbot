@@ -4,16 +4,15 @@ import math
 import re
 from random import randint, gauss
 
-from builtins import range
+from six.moves import range
 
-import cscslackbot.slack as slack
 from cscslackbot.plugins import Command
 from cscslackbot.utils import clamp
 
 XDY_REGEX = re.compile(r'([0-9]+)?d([0-9]+)', re.IGNORECASE)
 
 
-class HelloCommand(Command):
+class RollCommand(Command):
     name = 'roll'
     help_text = 'Rolls a die'
 
@@ -45,11 +44,12 @@ class HelloCommand(Command):
 
             # Prevent abuse
             msg = None
-            if count > self.config['max_count'] or faces > self.config['max_faces']:
+            c = self.config['plugins']['roll']
+            if count > c['max_count'] or faces > c['max_faces']:
                 msg = "Jesus christ calm your shit"
-            elif faces > self.config['reasonable_faces']:
+            elif faces > c['reasonable_faces']:
                 msg = "What do you picture these dice even look like?"
-            elif count > self.config['reasonable_count']:
+            elif count > c['reasonable_count']:
                 msg = "There's a limit to the number of dice I can fit in my hand"
             elif count == 0 or faces in (0, 1):
                 msg = "What possible use would rolling that have?"
@@ -64,7 +64,7 @@ class HelloCommand(Command):
             if count == 1:
                 # Only roll one die
                 value = randint(1, faces)
-            elif count <= self.config['displayable_count']:
+            elif count <= c['displayable_count']:
                 # Show specific rolls
                 rolls = [randint(1, faces) for i in range(count)]
                 value = sum(rolls)
@@ -74,7 +74,7 @@ class HelloCommand(Command):
                 value = approximate_roll(count, faces)
 
             message = template.format(count, faces, value)
-            slack.send_message(event['channel'], message)
+            self.slack.send_message(event['channel'], message)
 
 
 def approximate_roll(m, n):

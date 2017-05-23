@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-import cscslackbot.slack as slack
 from cscslackbot.plugins import Command
 
 
@@ -13,4 +12,4 @@ class HelloCommand(Command):
         if 'user' in event:
             user = event['user']
             greeting = 'Hey <@{}>! :partyparrot:'.format(user)
-        slack.send_message(event['channel'], greeting)
+        self.slack.send_message(event['channel'], greeting)

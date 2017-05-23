@@ -1,5 +1,5 @@
-# Replace values in defaults.ini
-plugins: [
+# Replace values in defaults.yml
+enabled_plugins: [
   'echo',
   'uptime',
   'twitter',
@@ -17,6 +17,6 @@ logging:
       count: 3
 
 # Plugins have their own sections based on their names
-uptime: {
-  time_format: '%c'
-}
+plugins:
+  uptime:
+    time_format: '%c'

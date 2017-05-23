@@ -1,68 +1,46 @@
-from __future__ import print_function
 from __future__ import unicode_literals
 
 import logging
-import time
+import os
 
-import cscslackbot.logconfig as logconfig
-import cscslackbot.plugins as plugins
-import cscslackbot.slack as slack
-from cscslackbot.config import config, load_config, load_secrets
+from cscslackbot.config import Configuration
+from cscslackbot.slackbot import Slackbot
+from cscslackbot.slack import SlackMode
 
+CONFIG_FILE = 'config.yml'
+DEFAULTS_FILE = 'defaults.yml'
+SECRETS_FILE = 'secrets.yml'
 logger = logging.getLogger(__name__)
 
 
-def process_event(event):
-    if 'type' not in event:
-        logger.error('Received message without type key: {}'.format(event))
-        return
-    plugins.plugins_process_event(event)
+def load_config(config_file=None, defaults_file=None, secrets_file=None):
+    conf = Configuration()
+    cannot_load_config = False
 
+    if defaults_file and not os.path.isfile(defaults_file):
+        logger.critical("Please make sure '{}' exists.".format(defaults_file))
+        cannot_load_config = True
+    if secrets_file and not os.path.exists(secrets_file):
+        logger.critical("Please make sure '{}' exists.".format(secrets_file))
+        cannot_load_config = True
 
-def run():
-    # Configure logger
-    if 'logging' in config:
-        logconfig.configure(config['logging'])
-
-    logger.info('Starting bot')
-
-    if not slack.connect():
-        logger.error('Cannot connect to Slack. Please verify your token in the config.')
-        return
+    if cannot_load_config:
+        logger.critical("Could not load configuration files!")
     else:
-        logger.info('Connected to Slack as {} ({})'.format(slack.authed_user, slack.authed_user_id))
+        conf.load(config_file, defaults_file)
+        conf.load_secrets(secrets_file)
 
-    plugins.load_plugins()
+    return conf
 
+
+def run(slack_mode=SlackMode.NORMAL, slack_script=None):
     try:
-        while True:
-            events = slack.get_events()
-            for event in events:
-                logger.info(str(event))
-
-                if config['debug_mode']:
-                    # Whitelist #bottesting
-                    if 'channel' not in event:
-                        continue
-                    if event['channel'] not in ['C494WSTUL', '#bottesting']:
-                        continue
-                    # Only respond to the developer when in debug mode
-                    if 'user' not in event or event['user'] != slack.authed_user_id:
-                        continue
-
-                process_event(event)
-
-            # Don't hog the CPU busy-waiting
-            if slack.mode == slack.SlackState.MODE_NORMAL:
-                time.sleep(0.1)
-            # INTERACTIVE calls input which blocks
-            elif slack.mode == slack.SlackState.MODE_SCRIPT:
-                logger.info("End of script")
-                break
+        conf = load_config(CONFIG_FILE, DEFAULTS_FILE, SECRETS_FILE)
+        print(conf)
+        bot = Slackbot(conf, slack_mode=slack_mode, slack_script=slack_script)
+        bot.run()
     except KeyboardInterrupt:
         logger.info('Shutting down')
     except:
         logger.critical('Uncaught exception!', exc_info=True)
         exit(-1)
-
-

@@ -1,9 +1,22 @@
+!echo >>> Running !help <<<
 !help
+
+!echo >>> Rolling 3d3 <<<
 !roll 3d3
-!slap asdf
+
+!echo >>> Slapping a user <<<
+!slap A user
+
+!echo >>> Identifying self <<<
 !identify
-!echo assdsf
+
+!echo >>> Greeting you <<<
 !hello
+
+!echo >>> Testing Twitter links <<<
 say what? https://twitter.com/SwiftOnSecurity/status/834639723318611969
+
+!echo >>> Displaying uptime <<<
 !uptime
-That's all folks
+
+!echo >>> That's all folks <<<

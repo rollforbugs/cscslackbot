@@ -6,36 +6,81 @@ from logging import getLogger
 
 from six import with_metaclass
 
-from cscslackbot.config import config, load_config_defaults
-from cscslackbot.slack import is_own_event
+from cscslackbot.config import Configuration, dict_merge
 
 
 logger = getLogger(__name__)
+active_loader = None
+loaded_plugins = []
 
 
-# http://martyalchin.com/2008/jan/10/simple-plugin-framework/
-class PluginLoader(type):
-    def __init__(cls, name, bases, attrs):
-        if not hasattr(cls, 'plugins'):
-            cls.plugins = []
-        else:
-            if hasattr(cls, 'name'):
-                logger.info('Loading plugin {}'.format(cls.name))
-                cls.plugins.append(cls())
-                # Give the plugin easy access to its own config
-                cls.config = config[cls.name]
+class PluginLoader:
+    def __init__(self, config, slack, bot):
+        self.config = config
+        self.slack = slack
+        self.bot = bot
+
+    def load_plugins(self, plugins, plugin_dir):
+        global active_loader
+        active_loader = self
+
+        plugin_module = plugin_dir.replace('/', '.')
+        for plugin in plugins:
+            # Try to load config defaults
+            defaults_file = '{}/{}/defaults.yml'.format(plugin_dir, plugin)
+            defaults = Configuration()
+            if os.path.exists(defaults_file):
+                defaults.load_defaults(defaults_file)
             else:
-                logger.info('Loading plugin template {}'.format(cls.__name__))
+                self.config.load_defaults()
+
+            if plugin not in active_loader.config['plugins']:
+                active_loader.config['plugins'][plugin] = defaults
+            else:
+                dict_merge(active_loader.config['plugins'][plugin], defaults, overwrite=False)
+
+            # Load the module
+            import_module('{}.{}'.format(plugin_module, plugin))
+
+        # Restore original state of global variables
+        loaded = []
+        while len(loaded_plugins) > 0:
+            loaded.append(loaded_plugins.pop(0))
+        active_loader = None
+
+        return loaded
 
 
-class Plugin(with_metaclass(PluginLoader, object)):
+class PluginType(type):
+    def __init__(cls, name, bases, attrs):
+        if hasattr(cls, 'name'):
+            logger.info('Loading plugin {}'.format(cls.name))
+            loaded_plugins.append(cls(config=active_loader.config,
+                                      slack=active_loader.slack,
+                                      bot=active_loader.bot))
+        else:
+            logger.info('Loading plugin template {}'.format(cls.__name__))
+
+
+class Plugin(with_metaclass(PluginType, object)):
     # A plugin is expected to provide the following attributes:
     # name:          A short name for the plugin (module name if not given)
     # help_text:     [optional] A short string describing use of the plugin
     # help_para:     [optional] A full description of how to use the plugin
     #
     # process_event: [optional] A function to be called when a Slack event occurs
-    pass
+    def __init__(self, config, slack, bot):
+        super(Plugin, self).__init__()
+
+        self.config = config
+        self.slack = slack
+        self.bot = bot
+
+        if not hasattr(self, 'name'):
+            self.name = self.__module__
+
+    def process_event(self, event):
+        pass
 
 
 class Command(Plugin):
@@ -43,8 +88,8 @@ class Command(Plugin):
     # command:         [optional] The command to respond to (copies name if not given)
     #
     # process_command: [optional] A function to be called when the command is given
-    def __init__(self):
-        super(Command, self).__init__()
+    def __init__(self, config, slack, bot):
+        super(Command, self).__init__(config, slack, bot)
 
         if not hasattr(self, 'command'):
             self.command = self.name
@@ -55,15 +100,15 @@ class Command(Plugin):
             return
         if 'text' not in event:
             return
-        if not config['debug_mode']:
-            if is_own_event(event):
+        if not self.config['debug_mode']:
+            if self.slack.is_own_event(event):
                 return
 
         # Get the message
         message = event['text'].strip()
 
         # Check if the message is calling this command
-        command_prefix = config['commands']['prefix'] + self.command.lower()
+        command_prefix = self.config['command_prefix'] + self.command.lower()
         if not message.lower().startswith(command_prefix):
             return
 
@@ -73,23 +118,3 @@ class Command(Plugin):
 
     def process_command(self, event, args):
         pass
-
-
-def load_plugins():
-    plugin_module = config['plugin_dir'].replace('/', '.')
-    for plugin in config['plugins']:
-        # Try to load config defaults
-        defaults_file = '{}/{}/defaults.yml'.format(config['plugin_dir'], plugin)
-        if os.path.exists(defaults_file):
-            load_config_defaults(defaults_file, section=plugin)
-        else:
-            load_config_defaults(section=plugin)
-
-        # Load the module
-        import_module('{}.{}'.format(plugin_module, plugin))
-
-
-def plugins_process_event(event):
-    for p in Plugin.plugins:
-        if hasattr(p, 'process_event'):
-            p.process_event(event)

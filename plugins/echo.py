@@ -9,4 +9,4 @@ class EchoCommand(Command):
     help_text = 'Echoes a message back'
 
     def process_command(self, event, args):
-        slack.send_message(event['channel'], args)
+        self.slack.send_message(event['channel'], args)

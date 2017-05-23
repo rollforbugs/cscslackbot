@@ -2,14 +2,15 @@ debug_mode: true
 # The module in which plugins are stored
 plugin_dir: 'plugins'
 # A list of plugins to enable
-plugins: []
-
-commands:
-  prefix: '!'
+enabled_plugins: []
+# The prefix for command plugins
+command_prefix: '!'
 
 logging:
   format: '%(asctime)s  [%(levelname)s]  %(name)s - %(message)s'
   datefmt: '%Y-%m-%d %H:%M:%S'
   console:
-    level: DEBUG
-  files: []
+    level: INFO
+  files: {}
+
+plugins: {}

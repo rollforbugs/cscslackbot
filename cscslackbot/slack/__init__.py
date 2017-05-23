@@ -2,107 +2,129 @@ from __future__ import unicode_literals
 
 from logging import getLogger
 
-from builtins import input
+from six.moves import input
 from slackclient import SlackClient
 from websocket import WebSocketConnectionClosedException
 
-from cscslackbot.config import config, secrets
 
-logger = getLogger(__name__)
-
-###
-
-mode = None
-script_file = ''
+class SlackMode(object):
+    NORMAL = 0
+    SCRIPTED = 1
+    INTERACTIVE = 2
 
 
-class SlackState(object):
-    MODE_NORMAL = 'NORMAL'
-    MODE_INTERACTIVE = 'INTERACTIVE'
-    MODE_SCRIPT = 'SCRIPT'
+class Slack(object):
+    def __init__(self, config):
+        self.config = config
+        self.api_key = config.get('secrets/SLACK_API_KEY')
+        self.client = SlackClient(self.api_key)
+        self.logger = getLogger(__name__)
 
-    MODE_OPTIONS = {MODE_NORMAL, MODE_INTERACTIVE, MODE_SCRIPT}
+        self.authed_user = ''
+        self.authed_user_id = ''
+        self.authed_team = ''
+        self.authed_team_id = ''
+        self.authed_team_url = ''
 
+        self.mode = SlackMode.NORMAL
 
-###
+    def connect(self):
+        # Try to connect to Slack
+        test_result = self.client.api_call('auth.test', token=self.api_key)
+        if not test_result['ok']:
+            self.logger.error('Could not connect to Slack! ({})'.format(test_result['error']))
+            return False
 
-authed_user = ''
-authed_user_id = ''
-authed_team = ''
-authed_team_id = ''
-authed_team_url = ''
-channels = []
-client = SlackClient(secrets['SLACK_API_KEY'])
+        if not self.client.rtm_connect():
+            self.logger.error('Could not connect to RTM API!')
+            return False
 
+        self.authed_user = test_result['user']
+        self.authed_user_id = test_result['user_id']
+        self.authed_team = test_result['team']
+        self.authed_team_id = test_result['team_id']
+        self.authed_team_url = test_result['url']
+        return True
 
-def connect():
-    global client
-    global authed_user, authed_user_id
-    global authed_team, authed_team_id, authed_team_url
-    global channels
+    def send_message(self, channel, text, **kwargs):
+        return self.client.api_call('chat.postMessage',
+                                    channel=channel,
+                                    text=text,
+                                    as_user=not self.config['debug_mode'],
+                                    **kwargs)
 
-    # Try to connect to Slack
-    test_result = client.api_call('auth.test', token=secrets['SLACK_API_KEY'])
-    if not test_result['ok']:
-        logger.error('Could not connect to Slack! ({})'.format(test_result['error']))
+    def get_events(self):
+        try:
+            return self.client.rtm_read()
+
+        except WebSocketConnectionClosedException:
+            self.logger.error('WebSocket connection for RTM API was closed!')
+            if self.client.rtm_connect():
+                return self.get_events()
+
+            self.logger.critical('Could not reconnect!')
+
+    def is_own_event(self, event):
+        if 'user' in event:
+            if event['user'] in (self.authed_user, self.authed_user_id):
+                return True
+
         return False
 
-    if not client.rtm_connect():
-        logger.error('Could not connect to RTM API!')
-        return False
 
-    # Connected - set global variables for connection
-    authed_user = test_result['user']
-    authed_user_id = test_result['user_id']
-    authed_team = test_result['team']
-    authed_team_id = test_result['team_id']
-    authed_team_url = test_result['url']
-    channels = client.api_call('channels.list', exclude_archived=1)
-    return True
+class PseudoSlackScripted(Slack):
+    def __init__(self, config, script):
+        self.config = config
+        self.logger = getLogger(__name__)
 
+        self.authed_user = 'Scripted Test User'
+        self.authed_user_id = 'U00SCRIPT'
+        self.authed_team = 'Scripted Test Team'
+        self.authed_team_id = 'T00KIDDIE'
+        self.authed_team_url = 'https://scripted-bot-testing.slack.com'
 
-def send_message(channel, message, **kwargs):
-    if mode == SlackState.MODE_NORMAL:
-        return client.api_call('chat.postMessage',
-                               channel=channel,
-                               text=message,
-                               as_user=not config['debug_mode'],
-                               **kwargs)
-    elif mode == SlackState.MODE_INTERACTIVE or mode == SlackState.MODE_SCRIPT:
-        print(message)
+        self.script = script
+        self.mode = SlackMode.SCRIPTED
 
+    def connect(self):
+        return True
 
-def get_events():
-    try:
-        if mode == SlackState.MODE_NORMAL:
-            return client.rtm_read()
-        elif mode == SlackState.MODE_INTERACTIVE:
-            text = input("> ")
-            return [mock_event(text)]
-        elif mode == SlackState.MODE_SCRIPT:
-            # pass
-            with open("dev/scripts/" + script_file) as f:
-                lines = f.readlines()
-                return [mock_event(l) for l in lines]
+    def send_message(self, channel, text, **kwargs):
+        print(text)
 
-        else:
-            print ("Unhandled case!")
-            return
+    def get_events(self):
+        with open(self.script) as f:
+            for line in f:
+                yield self.mock_event(line)
 
-    except WebSocketConnectionClosedException:
-        logger.error('WebSocket connection for RTM API was closed!')
-        if client.rtm_connect():
-            return get_events()
-        logger.critical('Could not reconnect!')
+    def mock_event(self, text):
+        return {'type': 'message', 'channel': 'C494WSTUL', 'user': self.authed_user_id,
+                'text': text}
 
 
-def mock_event(text):
-    return {'type': 'message', 'channel': 'C494WSTUL', 'user': authed_user_id,
-            'text': text}
+class PseudoSlackInteractive(Slack):
+    def __init__(self, config):
+        self.config = config
+        self.logger = getLogger(__name__)
 
+        self.authed_user = 'Interactive Test User'
+        self.authed_user_id = 'UINTERACT'
+        self.authed_team = 'Interactive Test Team'
+        self.authed_team_id = 'TINTERACT'
+        self.authed_team_url = 'https://interactive-bot-testing.slack.com'
 
-def is_own_event(event):
-    if 'user' in event:
-        if event['user'] in (authed_user, authed_user_id):
-            return True
-    return False
+        self.mode = SlackMode.INTERACTIVE
+
+    def connect(self):
+        return True
+
+    def send_message(self, channel, text, **kwargs):
+        print(text)
+
+    def get_events(self):
+        text = input("> ")
+        return [self.mock_event(text)]
+
+    def mock_event(self, text):
+        return {'type': 'message', 'channel': 'C494WSTUL', 'user': self.authed_user_id,
+                'text': text}
