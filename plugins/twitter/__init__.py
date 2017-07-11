@@ -5,20 +5,21 @@ from logging import getLogger
 import tweepy
 
 import cscslackbot.slack as slack
-from cscslackbot.config import secrets
+from cscslackbot.config import get_config
 from cscslackbot.plugins import Plugin
 from . import twitter
 
 
+config = get_config('plugins.twitter')
 logger = getLogger(__name__)
 
 # Configure twitter api
 using_twitter = True
 try:
-    consumer_key = secrets['twitter_consumer_key']
-    consumer_secret = secrets['twitter_consumer_secret']
-    access_token = secrets['twitter_access_token']
-    access_secret = secrets['twitter_access_secret']
+    consumer_key = config['consumer_key']
+    consumer_secret = config['consumer_secret']
+    access_token = config['access_token']
+    access_secret = config['access_secret']
 
     if "" not in {consumer_key, consumer_secret, access_token, access_secret}:
         auth = tweepy.OAuthHandler(consumer_key, consumer_secret)

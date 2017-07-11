@@ -1,21 +1,23 @@
 from __future__ import unicode_literals
 
-from cscslackbot.config import config
+from cscslackbot.config import get_config
 import cscslackbot.slack as slack
 from cscslackbot.plugins import Command, Plugin
+
+core_config = get_config(namespace='core')
 
 
 def make_help_string(plugin):
     if isinstance(plugin, Command):
         if hasattr(plugin, 'help_text'):
             string = 'Command: `{}{}` {}'.format(
-                config['commands']['prefix'],
+                core_config['commands']['prefix'],
                 plugin.command,
                 plugin.help_text
             )
         else:
             string = 'Command: `{}{}` {}'.format(
-                config['commands']['prefix'],
+                core_config['commands']['prefix'],
                 plugin.command,
                 'Help is missing for this command.'
             )

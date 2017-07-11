@@ -1,0 +1,17 @@
+debug_mode: true
+# The module in which plugins are stored
+plugin_dir: 'plugins'
+# A list of plugins to enable
+plugins: [
+  'echo',
+  'hello',
+  'help',
+  'identify',
+  'slap',
+  'uptime',
+  'roll',
+  'twitter',
+]
+
+commands:
+  prefix: '!'

@@ -1,14 +1,16 @@
-from __future__ import print_function
 from __future__ import unicode_literals
 
-import logging.config
 import os.path
 
 import yaml
 
+from cscslackbot.utils.path import list_files
 
-config = {}
-secrets = {}
+
+CONFIG_PATH = 'config'
+
+_config = {}
+namespaces = []
 
 
 def _dict_merge(merged, source, overwrite=False):
@@ -21,62 +23,64 @@ def _dict_merge(merged, source, overwrite=False):
             merged[k] = source[k]
 
 
-def load_config(config_file, defaults_file=None, section=None):
-    global config
-    load_config_defaults(defaults_file=defaults_file, section=section)
+def get_config(namespace=None):
+    config = _config
+    if namespace is None:
+        return config
 
-    open(config_file, 'a').close()
-    with open(config_file, 'r') as f:
+    namespaces.append(namespace)
+    components = namespace.split('.')
+    for component in components:
+        if component not in config:
+            config[component] = {}
+        config = config[component]
+
+    return config
+
+
+def get_value(key, default=None, namespace=None):
+    config = get_config(namespace)
+    try:
+        return config[key]
+    except KeyError:
+        return default
+
+
+def set_value(key, value, namespace=None):
+    config = get_config(namespace)
+    config[key] = value
+
+
+def load_config(filename, namespace=None, overwrite=True):
+    config = get_config(namespace)
+    with open(filename, 'r') as f:
         loaded = yaml.safe_load(f)
 
     if not loaded:
         loaded = {}
 
-    if section is None:
-        _dict_merge(config, loaded, overwrite=True)
-    elif section in config:
-        _dict_merge(config[section], loaded, overwrite=True)
-    else:
-        config[section] = loaded
+    _dict_merge(config, loaded, overwrite=overwrite)
 
 
-def load_config_defaults(defaults_file=None, section=None):
-    global config
-
-    if defaults_file is None:
-        # Create an empty configuration section
-        loaded = {}
-    else:
-        # Create a config section using the spec file
-        with open(defaults_file, 'r') as f:
-            loaded = yaml.safe_load(f)
-
-    if section is None:
-        # Merge into base config
-        _dict_merge(config, loaded, overwrite=False)
-    elif section in config:
-        _dict_merge(config[section], loaded, overwrite=False)
-    else:
-        config[section] = loaded
+def load_defaults(filename, namespace=None):
+    return load_config(filename, namespace=namespace, overwrite=False)
 
 
-def load_secrets(secrets_file):
-    global secrets
-    with open(secrets_file, 'r') as f:
-        secrets = yaml.safe_load(f)
+def save_config(filename, namespace=None):
+    config = get_config(namespace)
+    with open(filename, 'w') as f:
+        yaml.safe_dump(config, f)
 
 
-_cannot_load_config = False
-# config.ini is created if it doesn't exist
-if not os.path.exists('defaults.yml'):
-    logging.critical("Please make sure 'defaults.yml' exists.")
-    _cannot_load_config = True
-if not os.path.exists('secrets.yml'):
-    logging.critical("Please make sure 'secrets.yml' exists.")
-    _cannot_load_config = True
-if _cannot_load_config:
-    logging.critical("Could not load configuration files!")
-    exit()
+def reload_config_files(config_path):
+    if os.path.isfile(config_path):
+        load_config(config_path)
+    elif os.path.isdir(config_path):
+        for f in list_files(config_path):
+            rel = os.path.relpath(f, config_path)
+            namespace, ext = os.path.splitext(rel)
+            namespace = namespace.replace(os.path.sep, '.')
+            load_config(f, namespace=namespace)
 
-load_config('config.yml', 'defaults.yml')
-load_secrets('secrets.yml')
+
+reload_config_files(CONFIG_PATH)

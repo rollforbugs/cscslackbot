@@ -6,8 +6,10 @@ from builtins import input
 from slackclient import SlackClient
 from websocket import WebSocketConnectionClosedException
 
-from cscslackbot.config import config, secrets
+from cscslackbot.config import get_config, get_value
 
+
+config = get_config('slack')
 logger = getLogger(__name__)
 
 ###
@@ -32,7 +34,7 @@ authed_team = ''
 authed_team_id = ''
 authed_team_url = ''
 channels = []
-client = SlackClient(secrets['SLACK_API_KEY'])
+client = SlackClient(config['api_key'])
 
 
 def connect():
@@ -42,7 +44,7 @@ def connect():
     global channels
 
     # Try to connect to Slack
-    test_result = client.api_call('auth.test', token=secrets['SLACK_API_KEY'])
+    test_result = client.api_call('auth.test', token=config['api_key'])
     if not test_result['ok']:
         logger.error('Could not connect to Slack! ({})'.format(test_result['error']))
         return False
@@ -66,7 +68,7 @@ def send_message(channel, message, **kwargs):
         return client.api_call('chat.postMessage',
                                channel=channel,
                                text=message,
-                               as_user=not config['debug_mode'],
+                               as_user=not get_value('debug_mode', namespace='core'),
                                **kwargs)
     elif mode == SlackState.MODE_INTERACTIVE or mode == SlackState.MODE_SCRIPT:
         print(message)

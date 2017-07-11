@@ -6,10 +6,11 @@ from logging import getLogger
 
 from six import with_metaclass
 
-from cscslackbot.config import config, load_config_defaults
+from cscslackbot.config import get_config, load_defaults
 from cscslackbot.slack import is_own_event
 
 
+config = get_config('core')
 logger = getLogger(__name__)
 
 
@@ -23,7 +24,8 @@ class PluginLoader(type):
                 logger.info('Loading plugin {}'.format(cls.name))
                 cls.plugins.append(cls())
                 # Give the plugin easy access to its own config
-                cls.config = config[cls.name]
+                namespace = 'plugins.{}'.format(cls.name)
+                cls.config = get_config(namespace)
             else:
                 logger.info('Loading plugin template {}'.format(cls.__name__))
 
@@ -81,9 +83,8 @@ def load_plugins():
         # Try to load config defaults
         defaults_file = '{}/{}/defaults.yml'.format(config['plugin_dir'], plugin)
         if os.path.exists(defaults_file):
-            load_config_defaults(defaults_file, section=plugin)
-        else:
-            load_config_defaults(section=plugin)
+            namespace = 'plugins.{}'.format(plugin)
+            load_defaults(defaults_file, namespace=namespace)
 
         # Load the module
         import_module('{}.{}'.format(plugin_module, plugin))

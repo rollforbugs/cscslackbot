@@ -3,10 +3,14 @@ import logging.config
 import logging.handlers
 import sys
 
+from ..config import get_config
 from ..utils import from_human_readable
 
 
-def configure(config):
+config = get_config(namespace='logging')
+
+
+def configure():
     format = config.get('format', None)
     datefmt = config.get('datefmt', None)
     formatter = logging.Formatter(format, datefmt)

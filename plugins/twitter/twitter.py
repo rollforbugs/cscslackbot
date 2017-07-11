@@ -4,7 +4,10 @@ import re
 
 import tweepy
 
-from cscslackbot.config import secrets
+from cscslackbot.config import get_config
+
+
+config = get_config('plugins.twitter')
 
 
 #
@@ -54,11 +57,11 @@ def parse_status_url(url):
 
 # test
 if __name__ == "__main__":
-    consumer_key = secrets['twitter_consumer_key']
-    consumer_secret = secrets['twitter_consumer_secret']
+    consumer_key = config['consumer_key']
+    consumer_secret = config['consumer_secret']
 
-    access_token = secrets['twitter_access_token']
-    access_secret = secrets['twitter_access_secret']
+    access_token = config['access_token']
+    access_secret = config['access_secret']
 
     auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
     auth.set_access_token(access_token, access_secret)
