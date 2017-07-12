@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import logging
 import time
 
-import cscslackbot.logconfig as logconfig
 import cscslackbot.plugins as plugins
 import cscslackbot.slack as slack
 from cscslackbot.config import get_config
@@ -21,8 +20,6 @@ def process_event(event):
 
 
 def run():
-    # Configure logger
-    logconfig.configure()
     logger.info('Starting bot')
 
     if not slack.connect():
@@ -43,7 +40,7 @@ def run():
                     # Whitelist #bottesting
                     if 'channel' not in event:
                         continue
-                    if event['channel'] not in ['C494WSTUL', '#bottesting', 'D1L769WB1']:
+                    if event['channel'] not in ('C494WSTUL', '#bottesting'):
                         continue
                     # Only respond to the developer when in debug mode
                     if 'user' not in event or event['user'] != slack.authed_user_id:
