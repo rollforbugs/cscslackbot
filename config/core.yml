@@ -3,6 +3,7 @@ debug_mode: true
 plugin_dir: 'plugins'
 # A list of plugins to enable
 plugins: [
+  'clay24',
   'echo',
   'hello',
   'help',
