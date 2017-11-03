@@ -1,12 +1,19 @@
 from __future__ import unicode_literals
 
-import cscslackbot.slack as slack
-from cscslackbot.plugins import Command
+from cscslackbot.plugins import Plugin
+
+plugin = Plugin(__name__, 'Echoes back messages')
+"""
+A plugin to echo back messages.
+
+This is a very simple plugin that provides a command to echo back messages
+to the user. It isn't terribly useful in practice, but is great for testing.
+"""
 
 
-class EchoCommand(Command):
-    name = 'echo'
-    help_text = 'Echoes a message back'
-
-    def process_command(self, event, args):
-        slack.send_message(event['channel'], args)
+@plugin.command('echo')
+def echo(event, args):
+    """
+    Echo a message back.
+    """
+    plugin.slack.send_message(event['channel'], args)

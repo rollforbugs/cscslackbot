@@ -6,75 +6,111 @@ from random import randint, gauss
 
 from builtins import range
 
-import cscslackbot.slack as slack
-from cscslackbot.plugins import Command
+from cscslackbot.plugins import Plugin
 from cscslackbot.utils import clamp
 
 XDY_REGEX = re.compile(r'([0-9]+)?d([0-9]+)', re.IGNORECASE)
 
 
-class HelloCommand(Command):
-    name = 'roll'
-    help_text = 'Rolls a die'
+plugin = Plugin(__name__, 'Rolls dice')
 
-    def process_command(self, event, args):
-        template = 'Rolled {}d{} and got {}'
-        if args == '':
-            slack.send_message(
+
+lastdice = None
+lastfaces = None
+
+
+@plugin.command('roll')
+def roll(event, args):
+    """
+    Roll dice in XdY format.
+
+    If X is low enough, the individual rolls will be displayed.
+    """
+    template = 'Rolled {}d{} and got {}'
+
+    if not args:
+        dice = 1
+        faces = 6
+        message = template.format(dice, faces, _roll(dice, faces)[0])
+    else:
+        # Get number of dice and faces in XdY notation
+        xdy = XDY_REGEX.search(args)
+        if not xdy:
+            plugin.slack.send_message(
                 event['channel'],
-                template.format(1, 6, randint(1, 6))
+                "What did you want me to roll?"
             )
             return
+
+        # Extract count and faces
+        dice, faces = xdy.groups()
+        if dice:
+            dice = int(dice)
         else:
-            # Get number of dice and faces in XdY notation
-            xdy = XDY_REGEX.search(args)
-            if not xdy:
-                slack.send_message(
-                    event['channel'],
-                    "What did you want me to roll?"
-                )
-                return
+            dice = 1
+        faces = int(faces)
 
-            # Extract count and faces
-            count, faces = xdy.groups()
-            if count:
-                count = int(count)
+        # Prevent abuse
+        message = None
+        if dice > plugin.config['max_count'] or faces > plugin.config['max_faces']:
+            message = "Jesus christ calm your shit"
+        elif faces > plugin.config['reasonable_faces']:
+            message = "What do you picture these dice even look like?"
+        elif dice > plugin.config['reasonable_count']:
+            message = "There's a limit to the number of dice I can fit in my hand"
+        elif dice == 0 or faces in (0, 1):
+            message = "What possible use would rolling that have?"
+        elif dice < 0 or faces < 0:
+            message = "No."
+        else:
+            # Actually roll the dice!
+            global lastdice, lastfaces
+            lastdice = dice
+            lastfaces = faces
+
+            value, rolls = _roll(dice, faces)
+            if rolls and len(rolls) > 1:
+                message = (template + ' {}').format(dice, faces, value, rolls)
             else:
-                count = 1
-            faces = int(faces)
+                message = template.format(dice, faces, value)
 
-            # Prevent abuse
-            msg = None
-            if count > self.config['max_count'] or faces > self.config['max_faces']:
-                msg = "Jesus christ calm your shit"
-            elif faces > self.config['reasonable_faces']:
-                msg = "What do you picture these dice even look like?"
-            elif count > self.config['reasonable_count']:
-                msg = "There's a limit to the number of dice I can fit in my hand"
-            elif count == 0 or faces in (0, 1):
-                msg = "What possible use would rolling that have?"
-            elif count < 0 or faces < 0:
-                msg = "No."
-            if msg:
-                slack.send_message(event['channel'], msg)
-                return
+    plugin.slack.send_message(event['channel'], message)
 
-            # Roll!
 
-            if count == 1:
-                # Only roll one die
-                value = randint(1, faces)
-            elif count <= self.config['displayable_count']:
-                # Show specific rolls
-                rolls = [randint(1, faces) for i in range(count)]
-                value = sum(rolls)
-                template += ' {}'.format(rolls)
-            else:
-                # Use probability distribution
-                value = approximate_roll(count, faces)
+@plugin.command('reroll')
+def reroll(event, args):
+    """
+    Rerolls the last set of dice rolled.
+    """
+    if lastdice is None or lastfaces is None:
+        plugin.slack.send_message(event['channel'], "You have to roll in the first place!")
+        return
 
-            message = template.format(count, faces, value)
-            slack.send_message(event['channel'], message)
+    template = 'Rolled {}d{} and got {}'
+    value, rolls = _roll(lastdice, lastfaces)
+    if rolls:
+        message = (template + ' {}').format(lastdice, lastfaces, value, rolls)
+    else:
+        message = template.format(lastdice, lastfaces, value)
+
+    plugin.slack.send_message(event['channel'], message)
+
+
+def _roll(dice=1, faces=6):
+    if dice == 1:
+        # Only roll one die
+        value = randint(1, faces)
+        rolls = [value]
+    elif dice <= plugin.config['displayable_count']:
+        # Consider individual rolls
+        rolls = [randint(1, faces) for x in range(dice)]
+        value = sum(rolls)
+    else:
+        # Use probability distribution
+        value = approximate_roll(dice, faces)
+        rolls = None
+
+    return value, rolls
 
 
 def approximate_roll(m, n):

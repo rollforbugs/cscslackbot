@@ -4,13 +4,13 @@ plugin_dir: 'plugins'
 # A list of plugins to enable
 plugins: [
   'echo',
-  'hello',
-  'help',
-  'identify',
-  'slap',
-  'uptime',
+#  'hello',
+#  'help',
+#  'identify',
+#  'slap',
+#  'uptime',
   'roll',
-  'twitter',
+#  'twitter',
 ]
 
 commands:

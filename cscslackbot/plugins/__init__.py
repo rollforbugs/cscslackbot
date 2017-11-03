@@ -1,96 +1,141 @@
 from __future__ import unicode_literals
 
 import os
-from importlib import import_module
+from collections import defaultdict
 from logging import getLogger
 
-from six import with_metaclass
-
-from cscslackbot.config import get_config, load_defaults
+from cscslackbot.config import get_config
 from cscslackbot.slack import is_own_event
 
-
-config = get_config('core')
+core_config = get_config('core')
 logger = getLogger(__name__)
 
 
-# http://martyalchin.com/2008/jan/10/simple-plugin-framework/
-class PluginLoader(type):
-    def __init__(cls, name, bases, attrs):
-        if not hasattr(cls, 'plugins'):
-            cls.plugins = []
-        else:
-            if hasattr(cls, 'name'):
-                logger.info('Loading plugin {}'.format(cls.name))
-                cls.plugins.append(cls())
-                # Give the plugin easy access to its own config
-                namespace = 'plugins.{}'.format(cls.name)
-                cls.config = get_config(namespace)
-            else:
-                logger.info('Loading plugin template {}'.format(cls.__name__))
+class Plugin(object):
+    """
+    A plugin for the Slack bot.
 
+    The plugin will be initialized with a handle to the bot itself,
+    the Slack object associated with the bot, and a configuration
+    dictionary for the plugin to access its own configuration.
+    """
+    def __init__(self, name, description=''):
+        if ''.endswith('.py'):
+            name = os.path.split(name)[-1]
+            name, ext = os.path.splitext(name)
+        self.name = name
+        self.description = description
 
-class Plugin(with_metaclass(PluginLoader, object)):
-    # A plugin is expected to provide the following attributes:
-    # name:          A short name for the plugin (module name if not given)
-    # help_text:     [optional] A short string describing use of the plugin
-    # help_para:     [optional] A full description of how to use the plugin
-    #
-    # process_event: [optional] A function to be called when a Slack event occurs
-    pass
+        self._load_handler = None
+        self._unload_handler = None
+        self._event_handlers = defaultdict(lambda: list())
+        self._commands = {}
 
+        self.bot = None
+        self.slack = None
+        self.config = None
 
-class Command(Plugin):
-    # A plugin is expected to provide the following *additional* attributes:
-    # command:         [optional] The command to respond to (copies name if not given)
-    #
-    # process_command: [optional] A function to be called when the command is given
-    def __init__(self):
-        super(Command, self).__init__()
+    def _load(self, bot, slack, config):
+        """
+        Initializes the plugin. This function should only be used internally by
+        the Slackbot. After initializing basic state, __load calls the function
+        specified with the on_load decorator.
 
-        if not hasattr(self, 'command'):
-            self.command = self.name
+        Args:
+            bot (Slackbot): the Slackbot instance this plugin is registered to.
+            slack: the Slack instance this plugin should use.
+            config: the configuration dictionary for this plugin.
+        """
+        self.bot = bot
+        self.slack = slack
+        self.config = config
 
-    def process_event(self, event):
-        # Validate event
-        if event['type'] != 'message':
-            return
+        self._event_handlers['message'].append(self._handle_command)
+        if self._load_handler is not None:
+            self._load_handler()
+
+    def _unload(self):
+        """
+        Performs cleanup for the plugin. This function is internally used by
+        the Slackbot and calls the function specified with on_unload.
+        """
+        if self._unload_handler is not None:
+            self._unload_handler()
+
+    def _handle_command(self, event):
         if 'text' not in event:
             return
-        if not config['debug_mode']:
+        if not core_config['debug_mode']:
             if is_own_event(event):
                 return
 
         # Get the message
         message = event['text'].strip()
 
-        # Check if the message is calling this command
-        command_prefix = config['commands']['prefix'] + self.command.lower()
-        if not message.lower().startswith(command_prefix):
+        # Check that the message is calling this command
+        prefix = core_config['commands']['prefix']
+        if not message.startswith(prefix):
             return
 
-        # Call the command handler
-        args = message[len(command_prefix):].strip()
-        self.process_command(event, args=args)
+        split = message.split(None, 1)
+        if len(split) > 1:
+            command, args = split
+            args = args.strip()
+        else:
+            command, = split
+            args = None
 
-    def process_command(self, event, args):
-        pass
+        empty, command = command.split(core_config['commands']['prefix'])
+        if empty or command not in self._commands:
+            return
 
+        handler = self._commands[command]
+        handler(event, args)
 
-def load_plugins():
-    plugin_module = config['plugin_dir'].replace('/', '.')
-    for plugin in config['plugins']:
-        # Try to load config defaults
-        defaults_file = '{}/{}/defaults.yml'.format(config['plugin_dir'], plugin)
-        if os.path.exists(defaults_file):
-            namespace = 'plugins.{}'.format(plugin)
-            load_defaults(defaults_file, namespace=namespace)
+    def on_load(self):
+        """
+        A decorator that registers a function to be called when the plugin
+        is loaded.
 
-        # Load the module
-        import_module('{}.{}'.format(plugin_module, plugin))
+        All initialization for the plugin should be handled in a function
+        with this decorator applied.
+        """
+        def decorator(f):
+            self._load_handler = f
+            return f
+        return decorator
 
+    def on_unload(self):
+        """
+        A decorator that registers a function to be called when the plugin
+        is unloaded.
 
-def plugins_process_event(event):
-    for p in Plugin.plugins:
-        if hasattr(p, 'process_event'):
-            p.process_event(event)
+        All cleanup for the plugin should be handled in a function with
+        this decorator applied.
+        """
+        def decorator(f):
+            self._unload_handler = f
+            return f
+        return decorator
+
+    def on(self, event_type):
+        """
+        A decorator that registers a function as a plugin event handler.
+
+        :param event_type: The event type to handle, e.g., 'message'
+        """
+        def decorator(f):
+            self._event_handlers[event_type].append(f)
+            return f
+        return decorator
+
+    def command(self, command):
+        """
+        A decorator that registers a function as a plugin command.
+
+        :param command: The command to respond to.
+        """
+        def decorator(f):
+            self._commands[command] = f
+            return f
+        return decorator

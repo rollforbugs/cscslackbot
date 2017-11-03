@@ -12,11 +12,6 @@ from cscslackbot.config import get_config, get_value
 config = get_config('slack')
 logger = getLogger(__name__)
 
-###
-
-mode = None
-script_file = ''
-
 
 class SlackState(object):
     MODE_NORMAL = 'NORMAL'
@@ -26,7 +21,9 @@ class SlackState(object):
     MODE_OPTIONS = {MODE_NORMAL, MODE_INTERACTIVE, MODE_SCRIPT}
 
 
-###
+mode = SlackState.MODE_NORMAL
+script_file = ''
+
 
 authed_user = ''
 authed_user_id = ''
