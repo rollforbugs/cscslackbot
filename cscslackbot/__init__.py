@@ -59,6 +59,7 @@ class Slackbot:
         # Locate and register the Plugin object
         for objname, obj in iteritems(mod.__dict__):
             if isinstance(obj, Plugin):
+                self.logger.info('Loading plugin: {}'.format(module_name))
                 obj._load(bot=self, slack=self.slack, config=module_config)
                 self.plugins[p] = obj
                 for event_type, handlers in iteritems(obj._event_handlers):
@@ -68,6 +69,7 @@ class Slackbot:
                 break
 
     def unload_plugin(self, p):
+        self.logger.info('Unloading plugin: {}'.format(p))
         plugin = self.plugins[p]
         for command in plugin._commands:
             if command in self.commands:
