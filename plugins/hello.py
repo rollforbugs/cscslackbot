@@ -1,16 +1,18 @@
 from __future__ import unicode_literals
 
-import cscslackbot.slack as slack
-from cscslackbot.plugins import Command
+from cscslackbot.plugins import Plugin
 
 
-class HelloCommand(Command):
-    name = 'hello'
-    help_text = 'Sends you a friendly welcome'
+plugin = Plugin(__name__, 'Sends you a friendly welcome')
 
-    def process_command(self, event, args):
-        greeting = 'Hey! :partyparrot:'
-        if 'user' in event:
-            user = event['user']
-            greeting = 'Hey <@{}>! :partyparrot:'.format(user)
-        slack.send_message(event['channel'], greeting)
+
+@plugin.command('hello')
+def greet(event, args):
+    """
+    Make a little friendly conversation
+    """
+    greeting = 'Hey! :partyparrot:'
+    if 'user' in event:
+        user = event['user']
+        greeting = 'Hey <@{}>! :partyparrot:'.format(user)
+    plugin.slack.send_message(event['channel'], greeting)

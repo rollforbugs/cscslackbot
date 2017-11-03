@@ -2,15 +2,6 @@ from __future__ import unicode_literals
 
 import re
 
-import tweepy
-
-from cscslackbot.config import get_config
-
-
-config = get_config('plugins.twitter')
-
-
-#
 
 def find_twitter_url(msg):
     """
@@ -53,25 +44,3 @@ def parse_status_url(url):
         return sid
     except ValueError:
         return None
-
-
-# test
-if __name__ == "__main__":
-    consumer_key = config['consumer_key']
-    consumer_secret = config['consumer_secret']
-
-    access_token = config['access_token']
-    access_secret = config['access_secret']
-
-    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
-    auth.set_access_token(access_token, access_secret)
-    twitter_api = tweepy.API(auth)
-
-    url = "https://twitter.com/SwiftOnSecurity/status/834639723318611969"
-
-    status = parse_status_url(url)
-    try:
-        tweet = twitter_api.get_status(status)
-        print(tweet.created_at)
-    except tweepy.error.TweepError:
-        print("passed")

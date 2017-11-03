@@ -1,17 +1,16 @@
 from __future__ import unicode_literals
 
-import cscslackbot.slack as slack
-from cscslackbot.plugins import Command
 from random import randint
 
+from cscslackbot.plugins import Plugin
 
-class SlapCommand(Command):
-    name = 'slap'
-    help_text = 'Slaps a user'
+plugin = Plugin(__name__, 'Slap people!')
 
-    def process_command(self, event, args):
-        name = args
-        if name == '':
-            return
-        slapped = '{} was slapped! Hit {} times!'.format(name, randint(2, 5))
-        slack.send_message(event['channel'], slapped)
+
+@plugin.command('slap')
+def slap(event, args):
+    name = args
+    if not name:
+        return
+    slapped = '{} was slapped! Hit {} times!'.format(name, randint(2, 5))
+    plugin.slack.send_message(event['channel'], slapped)
