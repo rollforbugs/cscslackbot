@@ -34,6 +34,7 @@ class Plugin(object):
         self.bot = None
         self.slack = None
         self.config = None
+        self.logger = getLogger(name)
 
     def _load(self, bot, slack, config):
         """

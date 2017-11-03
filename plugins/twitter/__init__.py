@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-from logging import getLogger
-
 import tweepy
 
 from cscslackbot.plugins import Plugin
@@ -9,7 +7,6 @@ from . import twitter
 
 
 plugin = Plugin(__name__, 'Generate previews for tweets')
-logger = getLogger(__name__)
 
 twitter_api = None
 
@@ -30,7 +27,7 @@ def on_load():
             twitter_api = tweepy.API(auth)
 
     except KeyError:
-        logger.error('Update secrets for Twitter API')
+        plugin.logger.error('Update secrets for Twitter API')
 
 
 @plugin.on('message')
