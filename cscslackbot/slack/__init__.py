@@ -95,6 +95,9 @@ def get_events():
             return get_events()
         logger.critical('Could not reconnect!')
 
+    except IOError as e:
+        logger.error('Failed to get events: {}'.format(e))
+
 
 def mock_event(text):
     return {'type': 'message', 'channel': 'C494WSTUL', 'user': authed_user_id,
