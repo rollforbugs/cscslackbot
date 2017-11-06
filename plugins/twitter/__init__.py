@@ -47,8 +47,8 @@ def generate_tweet_preview(event):
     if twitter_url:
         status_id = twitter.parse_status_url(twitter_url)
         try:
-            tweet = twitter_api.get_status(status_id)
-            tweet_ = tweet.text.strip().replace("\n", "\n> ")
+            tweet = twitter_api.get_status(status_id, tweet_mode='extended')
+            tweet_ = tweet.full_text.strip().replace("\n", "\n> ")
             msg_out = "".join(
                 ["> ", tweet_, "\n", tweet.author.screen_name, " - ",
                  str(tweet.created_at.year)])
